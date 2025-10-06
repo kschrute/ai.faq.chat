@@ -1,0 +1,25 @@
+{
+  "name": "ai.faq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "license": "ISC",
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "build": "pnpm run build.llm && pnpm run build.web",
+    "build.llm": "./packages/llm/build.sh",
+    "build.web": "pnpm --filter web run build",
+    "dev": "concurrently -k -n llm,web -c cyan.bold,green.bold \"pnpm dev.llm\" \"pnpm dev.web\"",
+    "dev.llm": "./packages/llm/dev.sh",
+    "dev.web": "pnpm --filter web run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
+}

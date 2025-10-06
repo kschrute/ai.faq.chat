@@ -1,0 +1,18 @@
+[
+  {
+    "question": "What are you?",
+    "answer": "I'm a question-answering system for an FAQ using RAG with a pre-trained embedding model `all-MiniLM-L6-v2`."
+  },
+  {
+    "question": "How do I reset my password?",
+    "answer": "Go to settings and click 'Reset Password'."
+  },
+  {
+    "question": "What is the return policy?",
+    "answer": "Returns within 30 days."
+  },
+  {
+    "question": "How fast are refunds processed?",
+    "answer": "Refunds are processed within 7 business days."
+  }
+]

@@ -1,0 +1,12 @@
+[project]
+name = "llm"
+version = "0.1.0"
+description = "API service"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "faiss-cpu==1.9.0",
+  "fastapi==0.117.1",
+  "sentence-transformers==5.1.0",
+  "uvicorn==0.36.0",
+]
