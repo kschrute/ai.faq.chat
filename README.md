@@ -38,7 +38,9 @@ If you update FAQ in the `packages/llm/faq.json` file, run the following to rebu
 You can use `curl` to test the API or use the UI at http://localhost:5173
 
 ```shell
-curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{"question": "How do I reset my password?"}'
+curl -X POST http://localhost:8000/ask \
+    -H "Content-Type: application/json" \
+    -d '{"question": "How do I reset my password?"}'
 ```
 
 You should see a response like this:
@@ -50,7 +52,9 @@ You should see a response like this:
 And if you ask something that's not in the FAQ:
 
 ```shell
-curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{"question": "What is quantum computing?"}'
+curl -X POST http://localhost:8000/ask \
+    -H "Content-Type: application/json" \
+    -d '{"question": "What is quantum computing?"}'
 ```
 
 The response should be:
