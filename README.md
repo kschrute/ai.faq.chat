@@ -30,7 +30,7 @@ And to start the API and the Web app run this after:
 If you update FAQ in the `packages/llm/faq.json` file, run the following to rebuild the index:
 
 ```shell
-. ./build.sh
+./build.sh
 ```
 
 ## Testing the API
