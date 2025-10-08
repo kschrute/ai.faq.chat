@@ -14,5 +14,9 @@
   {
     "question": "How fast are refunds processed?",
     "answer": "Refunds are processed within 7 business days."
+  },
+  {
+    "question": "What questions are on the list?",
+    "answer": "- What are you?\n- How do I reset my password?\n- What is the return policy?\n- How fast are refunds processed?"
   }
 ]

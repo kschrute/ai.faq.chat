@@ -13,7 +13,12 @@ export default function Chat() {
     {
       id: 1,
       direction: "in",
-      text: "Hi there! Please ask anything you'd like to know. And I'll answer if your question is in the FAQ.",
+      text: "Hi there! Please ask anything you'd like to know. I'll answer if your question is similar enough to one of the questions on the FAQ list.",
+    },
+    {
+      id: 2,
+      direction: "in",
+      text: "You can ask something like \"How do I reset my password?\", \"Password reset\" or ask me for the list of questions.",
     },
   ]);
 
