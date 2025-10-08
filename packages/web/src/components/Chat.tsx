@@ -52,7 +52,7 @@ export default function Chat() {
     });
 
   return (
-    <div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-screen sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-screen sm:min-w-lg md:min-w-3xl">
+    <div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-dvh sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-dvh sm:min-w-lg md:min-w-3xl">
       <div className="hidden sm:block">
         <Header />
       </div>

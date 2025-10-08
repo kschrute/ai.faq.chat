@@ -12,9 +12,9 @@ const Message = React.memo((message: ChatMessage) => {
 
   const className = `${
     direction === "out"
-      ? "bg-blue-500 justify-self-end"
-      : "bg-zinc-500 justify-self-start"
-  } min-w-3/12 max-w-10/12 mb-3 px-4 py-2 rounded-2xl`;
+      ? "bg-blue-500 self-end"
+      : "bg-zinc-500 self-start"
+  } min-w-1/12 max-w-10/12 mb-3 px-4 py-2 rounded-2xl`;
 
   return (
     <div className={className}>
