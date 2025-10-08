@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import Header from "./Header";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
 import fetchAnswer from "../utils/fetchAnswer";
@@ -51,17 +52,18 @@ export default function Chat() {
     });
 
   return (
-    <div className="bg-gray-800 max-w-3xl mx-auto p-2 w-xl rounded-xl shadow-[0px_0px_42px_rgba(0,0,0,0.25)]">
-      <Messages
-        isLoading={isLoading}
-        messages={messages}
-        ref={messagesRef}
-      />
-      <MessageInput
-        isLoading={isLoading}
-        ref={inputRef}
-        onSendMessage={onSendMessage}
-      />
+    <div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-screen sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-screen sm:min-w-lg md:min-w-3xl">
+      <div className="hidden sm:block">
+        <Header />
+      </div>
+      <div className="bg-gray-800 flex flex-col flex-1 rounded-xl overflow-y-auto shadow-[0px_0px_42px_rgba(0,0,0,0.25)]">
+        <Messages isLoading={isLoading} messages={messages} ref={messagesRef} />
+        <MessageInput
+          isLoading={isLoading}
+          ref={inputRef}
+          onSendMessage={onSendMessage}
+        />
+      </div>
     </div>
   );
 }

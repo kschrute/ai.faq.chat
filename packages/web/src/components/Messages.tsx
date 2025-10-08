@@ -10,7 +10,7 @@ const Messages = forwardRef<HTMLDivElement, MessagesProps>((props, ref) => {
   const { isLoading, messages } = props;
 
   return (
-    <div className="overflow-y-auto h-[50vh] p-5">
+    <div className="flex-1 p-5 overflow-y-auto">
       {messages.map((message) => (
         <Message
           id={message.id}

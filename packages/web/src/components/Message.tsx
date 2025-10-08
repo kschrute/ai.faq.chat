@@ -8,9 +8,7 @@ export type ChatMessage = {
 };
 
 const Message = React.memo((message: ChatMessage) => {
-  const { id, direction, text } = message;
-
-  console.log(`Rendering message ${id}`);
+  const { direction, text } = message;
 
   const className = `${
     direction === "out"
