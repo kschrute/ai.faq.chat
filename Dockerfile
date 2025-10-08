@@ -33,21 +33,21 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install Python dependencies first to leverage Docker layer caching
-COPY packages/llm/requirements.txt ./packages/llm/requirements.txt
+COPY packages/api/requirements.txt ./packages/api/requirements.txt
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --no-compile --only-binary=:all: -r ./packages/llm/requirements.txt
+    && pip install --no-cache-dir --no-compile --only-binary=:all: -r ./packages/api/requirements.txt
 
 # Pre-download the embedding model to reduce cold start
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy the backend app and data files (faq_index.faiss, answers.json)
-COPY packages/llm ./packages/llm
+COPY packages/api ./packages/api
 
 # Copy built web assets from the web builder stage
 COPY --from=web-builder /app/packages/web/dist /app/web_dist
 
 # Run from the backend package directory
-WORKDIR /app/packages/llm
+WORKDIR /app/packages/api
 
 # Fly sets PORT at runtime; default to 8000 locally
 ENV PORT=8000

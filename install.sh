@@ -1,4 +1,4 @@
 #!/bin/bash
 
 pnpm install
-./packages/llm/install.sh
+./packages/api/install.sh
