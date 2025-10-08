@@ -8,7 +8,7 @@ This approach is simpler and faster to set up than fine-tuning, as it requires n
 
 The demo is avaialble at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
 
-![Demo](demo.png)
+![Demo](demo.jpeg)
 
 ## Prerequisites
 

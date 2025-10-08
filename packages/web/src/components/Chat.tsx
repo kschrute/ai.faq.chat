@@ -18,7 +18,7 @@ export default function Chat() {
     {
       id: 2,
       direction: "in",
-      text: "You can ask something like \"How do I reset my password?\", \"Password reset\" or ask me for the list of questions.",
+      text: "You can ask something like \"How do I reset my password?\" or just \"Password reset\".",
     },
   ]);
 
@@ -46,7 +46,7 @@ export default function Chat() {
     setIsLoading(true);
     const answer = await fetchAnswer(message);
     setIsLoading(false);
-    addMessage(answer || "This question is not in the FAQ.", "in");
+    addMessage(answer || "This question is not in the FAQ. Type in \"Questions list\" to see the list.", "in");
   };
 
   const scrollToBottom = () =>
@@ -61,7 +61,7 @@ export default function Chat() {
       <div className="hidden sm:block">
         <Header />
       </div>
-      <div className="bg-gray-800 flex flex-col flex-1 rounded-xl overflow-y-auto shadow-[0px_0px_42px_rgba(0,0,0,0.25)]">
+      <div className="flex flex-col flex-1 rounded-xl overflow-y-auto shadow-[0px_0px_42px_rgba(0,0,0,0.2)] bg-zinc-100 dark:bg-gray-800">
         <Messages isLoading={isLoading} messages={messages} ref={messagesRef} />
         <MessageInput
           isLoading={isLoading}
