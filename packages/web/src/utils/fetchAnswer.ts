@@ -1,12 +1,13 @@
 export default async function fetchAnswer(question: string) {
-	try {
-		const response = await fetch("http://localhost:8000/ask", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ question }),
-		});
+    try {
+        const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+        const response = await fetch(`${baseUrl}/ask`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ question }),
+        });
 		if (!response.ok) {
 			throw new Error("Network response was not ok");
 		}

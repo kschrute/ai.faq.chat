@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -12,7 +14,7 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Allow React app origin
+    allow_origins=["*", "http://localhost:5173"],  # Allow React app origin
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -28,7 +30,7 @@ class Query(BaseModel):
 
 @app.post('/ask')
 async def ask(query: Query):
-    await asyncio.sleep(0.9)
+    # await asyncio.sleep(0.9)
     embedding = model.encode([query.question])
     distances, indices = index.search(np.array(embedding), k=1)  # Top 1 match
     # If distance is too large (low similarity), return null
@@ -36,3 +38,10 @@ async def ask(query: Query):
     if distances[0][0] > similarity_threshold:  # Higher distance = less similar
         return {'answer': False}
     return {'answer': answers[indices[0][0]]}
+
+# Serve built frontend from /app/web_dist (copied in Docker image)
+try:
+    app.mount("/", StaticFiles(directory="/app/web_dist", html=True), name="static")
+except Exception:
+    # In dev or if assets missing, skip mounting
+    pass

@@ -1,0 +1,30 @@
+# Node / web artifacts
+node_modules/
+**/node_modules/
+**/dist/
+**/.next/
+**/.vite/
+**/.cache/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env/
+.uv/
+
+# VCS and editor
+.git/
+.DS_Store
+.npmrc
+.pnpm-store/
+
+# Local env files
+*.env
+packages/web/.env*
+
+# Logs
+**/*.log
