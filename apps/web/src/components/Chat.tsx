@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import Header from "./Header";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
 import type { ChatMessage } from "./Message";
@@ -28,11 +27,19 @@ export default function Chat() {
     }
   }, [isLoading]);
 
+  const scrollToBottom = useCallback(() => {
+    messagesRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+      inline: "nearest",
+    });
+  }, []);
+
   useEffect(() => {
     if (messages) {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const addMessage = useCallback((text: string, direction: "in" | "out") => {
     setMessages((prevMessages) => [
@@ -41,7 +48,7 @@ export default function Chat() {
     ]);
   }, []);
 
-  const onSendMessage = async (message: string) => {
+  const onSendMessage = useCallback(async (message: string) => {
     addMessage(message, "out");
     setIsLoading(true);
     try {
@@ -59,20 +66,10 @@ export default function Chat() {
         "in"
       );
     }
-  };
-
-  const scrollToBottom = () =>
-    messagesRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-      inline: "nearest",
-    });
+  }, [addMessage]);
 
   return (
     <div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-dvh sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-dvh sm:min-w-lg md:min-w-3xl">
-      <div className="hidden sm:block">
-        <Header />
-      </div>
       <div className="flex flex-col flex-1 rounded-xl overflow-y-auto shadow-[0px_0px_42px_rgba(0,0,0,0.2)] bg-zinc-100 dark:bg-gray-800">
         <Messages isLoading={isLoading} messages={messages} ref={messagesRef} />
         <MessageInput

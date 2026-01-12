@@ -28,10 +28,6 @@ class Query(BaseModel):
 
 @app.post("/ask")
 async def ask(query: Query):
-    print(os.getenv("DEV"))
-    print(os.getenv("DEBUG"))
-    print(os.getenv("MODEL"))
-
     # Add a 1 second delay in development mode (when DEBUG or DEV env variable is set)
     if os.getenv("DEBUG") == "1" or os.getenv("DEV") == "1":
         await asyncio.sleep(1)
