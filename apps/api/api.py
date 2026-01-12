@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from response import ChatCompletionResponse
 import asyncio
 import context
 import numpy as np
@@ -27,8 +28,8 @@ class Query(BaseModel):
     question: str
 
 
-@app.post("/ask")
-async def ask(query: Query):
+@app.post("/ask", response_model=ChatCompletionResponse)
+async def ask(query: Query) -> ChatCompletionResponse:
     # Add a 1 second delay in development mode (when DEBUG or DEV env variable is set)
     if os.getenv("DEBUG") == "1" or os.getenv("DEV") == "1":
         await asyncio.sleep(1)
@@ -40,7 +41,6 @@ async def ask(query: Query):
             detail="Service is still initializing. Please try again in a moment."
         )
     
-    # await asyncio.sleep(0.9)
     embedding = context.model.encode([query.question])
     distances, indices = context.index.search(np.array(embedding), k=1)  # Top 1 match
     # If distance is too large (low similarity), return null
