@@ -12,7 +12,9 @@ export default async function fetchAnswer(question: string) {
 			throw new Error("Network response was not ok");
 		}
 		const data = await response.json();
-		return data.answer;
+		// Parse OpenAI chat API format
+		const content = data.choices?.[0]?.message?.content;
+		return content || null;
 	} catch (error) {
 		console.error("API error:", error);
 		throw error;

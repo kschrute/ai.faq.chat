@@ -7,6 +7,7 @@ import asyncio
 import context
 import numpy as np
 import os
+import response
 
 
 app = FastAPI(lifespan=context.lifespan)
@@ -45,8 +46,13 @@ async def ask(query: Query):
     # If distance is too large (low similarity), return null
     similarity_threshold = 0.9  # Adjust based on testing; lower means stricter
     if distances[0][0] > similarity_threshold:  # Higher distance = less similar
-        return {"answer": False}
-    return {"answer": context.answers[indices[0][0]]}
+        # Return OpenAI format with null content when no match found
+        return response.build_chat_completion_response(content=None)
+    
+    answer = context.answers[indices[0][0]]
+    
+    # Return OpenAI chat API format
+    return response.build_chat_completion_response(content=answer)
 
 
 # Serve built frontend from /app/web_dist (copied in Docker image)
