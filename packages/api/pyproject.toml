@@ -1,5 +1,5 @@
 [project]
-name = "llm"
+name = "api"
 version = "0.1.0"
 description = "API service"
 readme = "README.md"
