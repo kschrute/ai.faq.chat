@@ -18,7 +18,7 @@ export default function Chat() {
     {
       id: 2,
       direction: "in",
-      text: "You can ask something like \"How do I reset my password?\" or just \"Password reset\".",
+      text: 'You can ask something like "How do I reset my password?" or just "Password reset".',
     },
   ]);
 
@@ -44,9 +44,21 @@ export default function Chat() {
   const onSendMessage = async (message: string) => {
     addMessage(message, "out");
     setIsLoading(true);
-    const answer = await fetchAnswer(message);
-    setIsLoading(false);
-    addMessage(answer || "This question is not in the FAQ. Type in \"Questions list\" to see the list.", "in");
+    try {
+      const answer = await fetchAnswer(message);
+      setIsLoading(false);
+      addMessage(
+        answer ||
+          'This question is not in the FAQ. Type in "Questions list" to see the list.',
+        "in"
+      );
+    } catch (error: unknown) {
+      setIsLoading(false);
+      addMessage(
+        error instanceof Error ? error.message : "Something went wrong",
+        "in"
+      );
+    }
   };
 
   const scrollToBottom = () =>

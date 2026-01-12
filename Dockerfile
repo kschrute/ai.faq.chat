@@ -40,7 +40,7 @@ RUN pip install --upgrade pip \
 # Pre-download the embedding model to reduce cold start
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
-# Copy the backend app and data files (faq_index.faiss, answers.json)
+# Copy the backend app and data files (index.faiss, answers.json)
 COPY apps/api ./apps/api
 
 # Copy built web assets from the web builder stage
