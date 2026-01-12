@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Header from "./Header";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
-import fetchAnswer from "../utils/fetchAnswer";
 import type { ChatMessage } from "./Message";
+import fetchAnswer from "@/utils/fetchAnswer";
 
 export default function Chat() {
   const [isLoading, setIsLoading] = useState<boolean>(false);

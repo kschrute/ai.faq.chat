@@ -1,5 +1,4 @@
 import { forwardRef, useState } from "react";
-import { CornerDownLeft } from "lucide-react";
 
 interface MessageInputProps {
   isLoading: boolean;
@@ -39,7 +38,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(
             className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 disabled:opacity-50"
             disabled={isLoading}
           >
-            <CornerDownLeft className="cursor-pointer text-gray-900 dark:text-gray-100" />
+            <div className="i-lucide-corner-down-left cursor-pointer text-gray-900 dark:text-gray-100" />
           </button>
         </form>
       </div>

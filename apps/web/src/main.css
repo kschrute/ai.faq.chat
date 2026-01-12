@@ -1,0 +1,15 @@
+:root {
+  --color-gray-100: theme('colors.gray.100');
+  --color-gray-700: theme('colors.gray.700');
+  --color-gray-900: theme('colors.gray.900');
+  --color-white: theme('colors.white');
+
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
