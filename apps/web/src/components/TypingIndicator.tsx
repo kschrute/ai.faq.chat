@@ -10,7 +10,7 @@ const TypingDot = ({
   ...rest
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={`typing-dot animate-bounce bg-gray-200 w-[6px] h-[6px] rounded-full ${className}`}
+    className={`typing-dot animate-bounce bg-gray-700 dark:bg-gray-200 w-[6px] h-[6px] rounded-full ${className}`}
     {...rest}
   />
 );
