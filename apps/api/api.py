@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from response import ChatCompletionResponse
+from response import ChatCompletionResponse, ChatCompletionMessage
+from typing import Optional
 import asyncio
 import context
 import numpy as np
@@ -24,12 +25,18 @@ app.add_middleware(
 )
 
 
-class Query(BaseModel):
-    question: str
+class ChatCompletionRequest(BaseModel):
+    """OpenAI chat completion request format."""
+    model: Optional[str] = None
+    messages: list[ChatCompletionMessage]
+    # Optional fields for OpenAI compatibility (not used but accepted)
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    stream: Optional[bool] = None
 
 
 @app.post("/chat", response_model=ChatCompletionResponse)
-async def chat(query: Query) -> ChatCompletionResponse:
+async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
     # Add a 1 second delay in development mode (when DEBUG or DEV env variable is set)
     if os.getenv("DEBUG") == "1" or os.getenv("DEV") == "1":
         await asyncio.sleep(1)
@@ -41,7 +48,25 @@ async def chat(query: Query) -> ChatCompletionResponse:
             detail="Service is still initializing. Please try again in a moment."
         )
     
-    embedding = context.model.encode([query.question])
+    # Extract the user's question from the messages array
+    # Get the last user message (most recent user input)
+    user_messages = [msg for msg in request.messages if msg.role == "user"]
+    if not user_messages:
+        raise HTTPException(
+            status_code=400,
+            detail="No user message found in messages array"
+        )
+    
+    # Get the last user message content
+    last_user_message = user_messages[-1]
+    if not last_user_message.content:
+        raise HTTPException(
+            status_code=400,
+            detail="User message content is empty"
+        )
+    
+    question = last_user_message.content
+    embedding = context.model.encode([question])
     distances, indices = context.index.search(np.array(embedding), k=1)  # Top 1 match
     # If distance is too large (low similarity), return null
     similarity_threshold = 0.9  # Adjust based on testing; lower means stricter
