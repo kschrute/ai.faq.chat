@@ -28,8 +28,8 @@ class Query(BaseModel):
     question: str
 
 
-@app.post("/ask", response_model=ChatCompletionResponse)
-async def ask(query: Query) -> ChatCompletionResponse:
+@app.post("/chat", response_model=ChatCompletionResponse)
+async def chat(query: Query) -> ChatCompletionResponse:
     # Add a 1 second delay in development mode (when DEBUG or DEV env variable is set)
     if os.getenv("DEBUG") == "1" or os.getenv("DEV") == "1":
         await asyncio.sleep(1)

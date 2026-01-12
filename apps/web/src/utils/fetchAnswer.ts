@@ -1,7 +1,7 @@
 export default async function fetchAnswer(question: string) {
     try {
         const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-        const response = await fetch(`${baseUrl}/ask`, {
+        const response = await fetch(`${baseUrl}/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
