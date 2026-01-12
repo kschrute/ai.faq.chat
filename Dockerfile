@@ -50,6 +50,7 @@ COPY --from=web-builder /app/apps/web/dist /app/web_dist
 WORKDIR /app/apps/api
 
 # Fly sets PORT at runtime; default to 8000 locally
+ENV MODEL="all-MiniLM-L6-v2"
 ENV PORT=8000
 EXPOSE 8000
 

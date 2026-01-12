@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     global model, index, answers
     try:
         print("Loading ML model and FAQ data...")
-        model = SentenceTransformer(os.getenv("MODEL"))
+        model = SentenceTransformer(os.getenv("MODEL") or "all-MiniLM-L6-v2")
         index = faiss.read_index("index.faiss")
         with open("answers.json", "r") as f:
             answers = json.load(f)
