@@ -42,27 +42,67 @@ If you update FAQ in the `apps/api/faq.json` file, run the following to rebuild 
 You can use `curl` to test the API or use the UI at http://localhost:5173
 
 ```shell
-curl -X POST http://localhost:8000/ask \
+curl -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \
-    -d '{"question": "How do I reset my password?"}'
+    -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "How do I reset my password?"}]}'
 ```
 
 You should see a response like this:
 
 ```json
-{ "answer": "Go to settings and click 'Reset Password'." }
+{
+  "id": "chatcmpl-ad02cfa696a1",
+  "object": "chat.completion",
+  "created": 1768231509,
+  "model": "faq-chat",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Go to settings and click 'Reset Password'."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}
 ```
 
 And if you ask something that's not in the FAQ:
 
 ```shell
-curl -X POST http://localhost:8000/ask \
+curl -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \
-    -d '{"question": "What is quantum computing?"}'
+    -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "What is quantum computing?"}]}'
 ```
 
 The response should be:
 
 ```json
-{ "answer": false }
+{
+  "id": "chatcmpl-8d069d933415",
+  "object": "chat.completion",
+  "created": 1768231526,
+  "model": "faq-chat",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}
 ```
