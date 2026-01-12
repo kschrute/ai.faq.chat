@@ -195,3 +195,6 @@ yarn-error.log*
 
 # Fly.io
 fly.toml
+
+# Turborepo
+.turbo
