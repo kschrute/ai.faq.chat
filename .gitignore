@@ -171,9 +171,9 @@ cython_debug/
 node_modules/
 
 # Builds
-/packages/*/dist
-/packages/*/node_modules
-/packages/*/.aws-sam
+/apps/*/dist
+/apps/*/node_modules
+/apps/*/.aws-sam
 
 # Testing
 /coverage

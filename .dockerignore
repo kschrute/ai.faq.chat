@@ -24,7 +24,7 @@ venv/
 
 # Local env files
 *.env
-packages/web/.env*
+apps/web/.env*
 
 # Logs
 **/*.log

@@ -31,7 +31,7 @@ And to start the API and the Web app run this after:
 
 ## Updating FAQ
 
-If you update FAQ in the `packages/api/faq.json` file, run the following to rebuild the index:
+If you update FAQ in the `apps/api/faq.json` file, run the following to rebuild the index:
 
 ```shell
 ./build.sh

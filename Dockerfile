@@ -9,13 +9,13 @@ RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
 # Pre-copy package manifest to maximize caching
-COPY packages/web/package.json ./packages/web/package.json
+COPY apps/web/package.json ./apps/web/package.json
 
 # Install with dev deps and filter to web workspace
 RUN pnpm -w install --frozen-lockfile --prod=false --filter @ai.faq/web...
 
 # Copy the actual sources and build
-COPY packages/web ./packages/web
+COPY apps/web ./apps/web
 # RUN pnpm -w --filter @ai.faq/web build
 RUN pnpm --filter web run build
 
@@ -33,21 +33,21 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install Python dependencies first to leverage Docker layer caching
-COPY packages/api/requirements.txt ./packages/api/requirements.txt
+COPY apps/api/requirements.txt ./apps/api/requirements.txt
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --no-compile --only-binary=:all: -r ./packages/api/requirements.txt
+    && pip install --no-cache-dir --no-compile --only-binary=:all: -r ./apps/api/requirements.txt
 
 # Pre-download the embedding model to reduce cold start
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy the backend app and data files (faq_index.faiss, answers.json)
-COPY packages/api ./packages/api
+COPY apps/api ./apps/api
 
 # Copy built web assets from the web builder stage
-COPY --from=web-builder /app/packages/web/dist /app/web_dist
+COPY --from=web-builder /app/apps/web/dist /app/web_dist
 
 # Run from the backend package directory
-WORKDIR /app/packages/api
+WORKDIR /app/apps/api
 
 # Fly sets PORT at runtime; default to 8000 locally
 ENV PORT=8000
