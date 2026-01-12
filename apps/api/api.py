@@ -48,6 +48,13 @@ async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
             detail="Service is still initializing. Please try again in a moment."
         )
     
+    # Validate that the model is properly initialized (check tokenizer)
+    if len(context.model) == 0 or context.model[0] is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not properly initialized. Please check server logs."
+        )
+    
     # Extract the user's question from the messages array
     # Get the last user message (most recent user input)
     user_messages = [msg for msg in request.messages if msg.role == "user"]
@@ -66,7 +73,13 @@ async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
         )
     
     question = last_user_message.content
-    embedding = context.model.encode([question])
+    try:
+        embedding = context.model.encode([question])
+    except AttributeError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model encoding failed: {str(e)}. Model may not be properly initialized."
+        )
     distances, indices = context.index.search(np.array(embedding), k=1)  # Top 1 match
     # If distance is too large (low similarity), return null
     similarity_threshold = 0.9  # Adjust based on testing; lower means stricter
