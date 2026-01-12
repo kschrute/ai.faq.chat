@@ -1,16 +1,18 @@
 export type ChatRole = "user" | "assistant" | "developer" | "system";
 
+export type ChatMessageContent =
+	| string
+	| string[]
+	| {
+			type: "text" | "image_url";
+			text?: "Here's an image:";
+			image_url?: { url: string };
+	  };
+
 export type ChatMessage = {
 	id: string;
 	role: ChatRole;
-	content?:
-		| string
-		| string[]
-		| {
-				type: "text" | "image_url";
-				text?: "Here's an image:";
-				image_url?: { url: string };
-		  };
+	content?: ChatMessageContent;
 	metadata?: Record<string, unknown> | null;
 	options?: Record<string, unknown> | null;
 };
@@ -18,10 +20,6 @@ export type ChatMessage = {
 export type ChatRequest = {
 	model: string;
 	messages: Array<ChatMessage>;
-	// messages: {
-	// 	role: ChatRole;
-	// 	content: string;
-	// }[];
 	temperature?: number; // optional (0–2, default 1)
 	max_tokens?: number; // optional – hard limit on output tokens
 	top_p?: number; // optional (nucleus sampling)
@@ -30,4 +28,16 @@ export type ChatRequest = {
 	seed?: number; // optional – for more reproducible outputs
 };
 
-export type APIResponse = ChatMessage[];
+type ChatCompletionChoice = {
+	index: number;
+	message: ChatMessage;
+	finish_reason: "stop" | "length" | "content_filter" | "null";
+};
+
+export type ChatCompletionResponse = {
+	id: string;
+	object: "chat.completion";
+	created: number;
+	model: string;
+	choices: Array<ChatCompletionChoice>;
+};

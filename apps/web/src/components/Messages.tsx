@@ -1,9 +1,10 @@
 import { forwardRef } from "react";
-import Message, { type ChatMessage } from "./Message";
+import Message from "./Message";
+import type { ChatMessage } from "@/types";
 
 interface MessagesProps {
   isLoading: boolean;
-  messages: ChatMessage[];
+  messages: Array<ChatMessage>;
 }
 
 const Messages = forwardRef<HTMLDivElement, MessagesProps>((props, ref) => {
@@ -12,14 +13,9 @@ const Messages = forwardRef<HTMLDivElement, MessagesProps>((props, ref) => {
   return (
     <div className="flex flex-col flex-1 p-5 pb-0 w-full overflow-y-auto">
       {messages.map((message) => (
-        <Message
-          id={message.id}
-          key={message.id}
-          text={message.text}
-          direction={message.direction}
-        />
+        <Message key={message.id} message={message} />
       ))}
-      {isLoading && <Message id={1} direction="in" />}
+      {isLoading && <Message message={{ id: "loading", role: "assistant" }} />}
       <div ref={ref} />
     </div>
   );

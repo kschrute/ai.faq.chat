@@ -1,4 +1,4 @@
-export default function isJSON(value: unknown) {
+export const isJSON = (value: unknown) => {
 	// Fast-path common primitives
 	if (value === null) return true;
 	if (typeof value === "string") {

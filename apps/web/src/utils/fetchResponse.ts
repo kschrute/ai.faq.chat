@@ -1,9 +1,9 @@
-import type { APIResponse, ChatMessage } from "@/types";
+import type { ChatCompletionResponse, ChatMessage } from "@/types";
 
-export default async function fetchResponse(
+export const fetchResponse = async (
 	message: string,
 	history?: ChatMessage[],
-): Promise<APIResponse> {
+): Promise<ChatCompletionResponse> => {
 	try {
 		// Build messages array in OpenAI format
 		const messages: Array<ChatMessage> = [];

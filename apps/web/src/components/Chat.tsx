@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
-import type { ChatMessage } from "./Message";
-import fetchAnswer from "@/utils/fetchAnswer";
+import { fetchResponse, flattenContent } from "@/utils";
+import type { ChatMessage } from "@/types";
 
 export default function Chat() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -10,14 +10,16 @@ export default function Chat() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 1,
-      direction: "in",
-      text: "Hi there! Please ask anything you'd like to know. I'll answer if your question is similar enough to one of the questions on the FAQ list.",
+      id: "system-1",
+      role: "system",
+      content:
+        "Hi there! Please ask anything you'd like to know. I'll answer if your question is similar enough to one of the questions on the FAQ list.",
     },
     {
-      id: 2,
-      direction: "in",
-      text: 'You can ask something like "How do I reset my password?" or just "Password reset".',
+      id: "system-2",
+      role: "system",
+      content:
+        'You can ask something like "How do I reset my password?" or just "Password reset".',
     },
   ]);
 
@@ -41,32 +43,47 @@ export default function Chat() {
     }
   }, [messages, scrollToBottom]);
 
-  const addMessage = useCallback((text: string, direction: "in" | "out") => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { id: Date.now(), text, direction },
-    ]);
-  }, []);
+  const addMessage = useCallback(
+    (message: Pick<ChatMessage, "content" | "role">) => {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { ...message, id: crypto.randomUUID() },
+      ]);
+    },
+    []
+  );
 
-  const onSendMessage = useCallback(async (message: string) => {
-    addMessage(message, "out");
-    setIsLoading(true);
-    try {
-      const answer = await fetchAnswer(message);
-      setIsLoading(false);
-      addMessage(
-        answer ||
-          'This question is not in the FAQ. Type in "Questions list" to see the list.',
-        "in"
-      );
-    } catch (error: unknown) {
-      setIsLoading(false);
-      addMessage(
-        error instanceof Error ? error.message : "Something went wrong",
-        "in"
-      );
-    }
-  }, [addMessage]);
+  const onSendMessage = useCallback(
+    async (message: string) => {
+      addMessage({
+        content: message,
+        role: "user",
+      });
+
+      setIsLoading(true);
+
+      try {
+        const res = await fetchResponse(message, messages);
+        setIsLoading(false);
+
+        const content = res.choices?.[0]?.message?.content;
+        addMessage({
+          content:
+            flattenContent(content) ||
+            'This question is not in the FAQ. Type in "Questions list" to see the list.',
+          role: "assistant",
+        });
+      } catch (error: unknown) {
+        setIsLoading(false);
+        addMessage({
+          content:
+            error instanceof Error ? error.message : "Something went wrong",
+          role: "assistant",
+        });
+      }
+    },
+    [addMessage, messages]
+  );
 
   return (
     <div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-dvh sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-dvh sm:min-w-lg md:min-w-3xl">
