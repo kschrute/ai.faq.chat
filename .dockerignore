@@ -15,6 +15,7 @@ __pycache__/
 venv/
 .env/
 .uv/
+index.faiss
 
 # VCS and editor
 .git/
