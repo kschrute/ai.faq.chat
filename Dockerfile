@@ -8,15 +8,17 @@ RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 # Use root workspace lockfile for deterministic, workspace-aware install
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
-# Pre-copy package manifest to maximize caching
+# Pre-copy package manifests to maximize caching
 COPY apps/web/package.json ./apps/web/package.json
+COPY packages/tsconfig/package.json ./packages/tsconfig/package.json
 
 # Install with dev deps and filter to web workspace
-RUN pnpm -w install --frozen-lockfile --prod=false --filter @ai.faq/web...
+RUN pnpm -w install --frozen-lockfile --prod=false --filter @ai-faq-chat/web...
 
 # Copy the actual sources and build
+COPY packages/tsconfig ./packages/tsconfig
 COPY apps/web ./apps/web
-# RUN pnpm -w --filter @ai.faq/web build
+# RUN pnpm -w --filter @ai-faq-chat/web build
 RUN pnpm --filter web run build
 
 FROM python:3.11-slim AS runtime

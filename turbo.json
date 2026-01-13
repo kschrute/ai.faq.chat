@@ -4,8 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", "*.faiss", "**/__pycache__/**"]
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "uv.lock", "pyproject.toml", "pnpm-lock.yaml"],
+      "outputs": ["dist/**", "*.faiss", "answers.json", "**/__pycache__/**"]
     },
     "dev": {
       "cache": false,
