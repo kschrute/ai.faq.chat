@@ -1,32 +1,33 @@
-from fastapi import FastAPI, HTTPException
+from chat_service import ChatService
+from config import Config
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from response import ChatCompletionResponse, ChatCompletionMessage
 from typing import Optional
 import asyncio
 import context
-import numpy as np
-import os
-import response
 
 
 app = FastAPI(lifespan=context.lifespan)
 
+# Initialize chat service
+chat_service = ChatService(similarity_threshold=Config.get_similarity_threshold())
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "http://localhost:5173"],  # Allow React app origin
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_origins=Config.get_cors_origins(),
+    allow_credentials=Config.CORS_ALLOW_CREDENTIALS,
+    allow_methods=Config.CORS_ALLOW_METHODS,
+    allow_headers=Config.CORS_ALLOW_HEADERS,
 )
 
 
 class ChatCompletionRequest(BaseModel):
     """OpenAI chat completion request format."""
+
     model: Optional[str] = None
     messages: list[ChatCompletionMessage]
     # Optional fields for OpenAI compatibility (not used but accepted)
@@ -37,65 +38,24 @@ class ChatCompletionRequest(BaseModel):
 
 @app.post("/chat", response_model=ChatCompletionResponse)
 async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
-    # Add a 1 second delay in development mode (when DEBUG or DEV env variable is set)
-    if os.getenv("DEBUG") == "1" or os.getenv("DEV") == "1":
-        await asyncio.sleep(1)
+    """
+    Handle chat completion requests.
 
-    # Check if model and data are loaded
-    if context.model is None or context.index is None or context.answers is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Service is still initializing. Please try again in a moment."
-        )
-    
-    # Validate that the model is properly initialized (check tokenizer)
-    if len(context.model) == 0 or context.model[0] is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Model is not properly initialized. Please check server logs."
-        )
-    
-    # Extract the user's question from the messages array
-    # Get the last user message (most recent user input)
-    user_messages = [msg for msg in request.messages if msg.role == "user"]
-    if not user_messages:
-        raise HTTPException(
-            status_code=400,
-            detail="No user message found in messages array"
-        )
-    
-    # Get the last user message content
-    last_user_message = user_messages[-1]
-    if not last_user_message.content:
-        raise HTTPException(
-            status_code=400,
-            detail="User message content is empty"
-        )
-    
-    question = last_user_message.content
-    try:
-        embedding = context.model.encode([question])
-    except AttributeError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Model encoding failed: {str(e)}. Model may not be properly initialized."
-        )
-    distances, indices = context.index.search(np.array(embedding), k=1)  # Top 1 match
-    # If distance is too large (low similarity), return null
-    similarity_threshold = 0.9  # Adjust based on testing; lower means stricter
-    if distances[0][0] > similarity_threshold:  # Higher distance = less similar
-        # Return OpenAI format with null content when no match found
-        return response.build_chat_completion_response(content=None)
-    
-    answer = context.answers[indices[0][0]]
-    
-    # Return OpenAI chat API format
-    return response.build_chat_completion_response(content=answer)
+    Processes user messages and returns FAQ answers using semantic similarity search.
+    """
+    # Add a delay in development mode
+    if Config.is_dev_mode():
+        await asyncio.sleep(Config.DEV_DELAY_SECONDS)
+
+    # Delegate business logic to service layer
+    return chat_service.process_chat_request(request.messages)
 
 
 # Serve built frontend from /app/web_dist (copied in Docker image)
 try:
-    app.mount("/", StaticFiles(directory="/app/web_dist", html=True), name="static")
+    app.mount(
+        "/", StaticFiles(directory=Config.WEB_DIST_PATH, html=True), name="static"
+    )
 except Exception:
     # In dev or if assets missing, skip mounting
     pass
