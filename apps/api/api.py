@@ -1,14 +1,14 @@
-from chat_service import ChatService
-from config import Config
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from response import ChatCompletionResponse, ChatCompletionMessage
-from typing import Optional
-import asyncio
-import context
 
+import context
+from chat_service import ChatService
+from config import Config
+from response import ChatCompletionMessage, ChatCompletionResponse
 
 app = FastAPI(lifespan=context.lifespan)
 
@@ -28,12 +28,12 @@ app.add_middleware(
 class ChatCompletionRequest(BaseModel):
     """OpenAI chat completion request format."""
 
-    model: Optional[str] = None
+    model: str | None = None
     messages: list[ChatCompletionMessage]
     # Optional fields for OpenAI compatibility (not used but accepted)
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    stream: Optional[bool] = None
+    temperature: float | None = None
+    max_tokens: int | None = None
+    stream: bool | None = None
 
 
 @app.post("/chat", response_model=ChatCompletionResponse)

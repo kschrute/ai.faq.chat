@@ -3,13 +3,15 @@ Business logic for chat/FAQ operations.
 Separates business logic from API route handlers.
 """
 
-from typing import Optional
-from fastapi import HTTPException
-from config import Config
+from typing import cast
+
 import numpy as np
-from response import ChatCompletionMessage, ChatCompletionResponse
-import response
+from fastapi import HTTPException
+
 import context
+import response
+from config import Config
+from response import ChatCompletionMessage, ChatCompletionResponse
 
 
 class ChatService:
@@ -70,7 +72,7 @@ class ChatService:
 
         return last_user_message.content
 
-    def search_faq(self, question: str) -> Optional[str]:
+    def search_faq(self, question: str) -> str | None:
         """
         Search for the most relevant FAQ answer using semantic similarity.
 
@@ -84,13 +86,23 @@ class ChatService:
         Raises:
             HTTPException: If model encoding fails.
         """
+        # Ensure model and resources are available (for mypy and runtime safety)
+        if context.model is None or context.index is None or context.answers is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Service dependencies not initialized",
+            )
+
         try:
             embedding = context.model.encode([question])
         except AttributeError as e:
             raise HTTPException(
                 status_code=503,
-                detail=f"Model encoding failed: {str(e)}. Model may not be properly initialized.",
-            )
+                detail=(
+                    f"Model encoding failed: {str(e)}. "
+                    "Model may not be properly initialized."
+                ),
+            ) from e
 
         # Search for the most similar FAQ
         distances, indices = context.index.search(
@@ -103,7 +115,7 @@ class ChatService:
             return None
 
         # Retrieve the answer
-        answer = context.answers[indices[0][0]]
+        answer = cast(str, context.answers[indices[0][0]])
         return answer
 
     def process_chat_request(

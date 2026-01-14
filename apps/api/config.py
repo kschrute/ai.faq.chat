@@ -4,7 +4,6 @@ Centralizes constants and environment-specific configuration.
 """
 
 import os
-from typing import Optional
 
 
 class Config:
