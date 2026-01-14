@@ -23,4 +23,4 @@ export const isJSON = (value: unknown) => {
 	}
 
 	return false;
-}
+};

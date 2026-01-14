@@ -1,15 +1,15 @@
 :root {
-    --color-text: var(--color-gray-700);
-    --color-bg: var(--color-white);
+	--color-text: var(--color-gray-700);
+	--color-bg: var(--color-white);
 }
 
 html.dark,
 .dark {
-    --color-text: var(--color-gray-100);
-    --color-bg: var(--color-gray-900);
+	--color-text: var(--color-gray-100);
+	--color-bg: var(--color-gray-900);
 }
 
 body {
-    color: var(--color-text);
-    background-color: var(--color-bg);
-} 
+	color: var(--color-text);
+	background-color: var(--color-bg);
+}

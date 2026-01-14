@@ -52,4 +52,4 @@ export const fetchResponse = async (
 		console.error("API error:", error);
 		throw error;
 	}
-}
+};
