@@ -1,12 +1,9 @@
 name: 'Setup Environment'
-description: 'Checkout code and setup Node.js, pnpm, Python, and uv with dependencies'
+description: 'Setup Node.js, pnpm, Python, and uv with dependencies'
 
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
