@@ -18,10 +18,11 @@ export default function Chat() {
 		{
 			id: "system-2",
 			role: "system",
-			content:
-				'You can ask something like "How do I reset my password?" or just "Password reset".',
+			content: 'You can ask something like "How do I reset my password?" or just "Password reset".',
 		},
 	]);
+	const stateMessagesRef = useRef(messages);
+	stateMessagesRef.current = messages;
 
 	useEffect(() => {
 		if (!isLoading) {
@@ -43,15 +44,9 @@ export default function Chat() {
 		}
 	}, [messages, scrollToBottom]);
 
-	const addMessage = useCallback(
-		(message: Pick<ChatMessage, "content" | "role">) => {
-			setMessages((prevMessages) => [
-				...prevMessages,
-				{ ...message, id: crypto.randomUUID() },
-			]);
-		},
-		[],
-	);
+	const addMessage = useCallback((message: Pick<ChatMessage, "content" | "role">) => {
+		setMessages((prevMessages) => [...prevMessages, { ...message, id: crypto.randomUUID() }]);
+	}, []);
 
 	const onSendMessage = useCallback(
 		async (message: string) => {
@@ -63,7 +58,7 @@ export default function Chat() {
 			setIsLoading(true);
 
 			try {
-				const res = await fetchResponse(message, messages);
+				const res = await fetchResponse(message, stateMessagesRef.current);
 				setIsLoading(false);
 
 				const content = res.choices?.[0]?.message?.content;
@@ -76,24 +71,19 @@ export default function Chat() {
 			} catch (error: unknown) {
 				setIsLoading(false);
 				addMessage({
-					content:
-						error instanceof Error ? error.message : "Something went wrong",
+					content: error instanceof Error ? error.message : "Something went wrong",
 					role: "assistant",
 				});
 			}
 		},
-		[addMessage, messages],
+		[addMessage]
 	);
 
 	return (
 		<div className="flex flex-col p-0 sm:p-5 max-w-3xl w-screen h-dvh sm:w-auto sm:h-180 sm:min-h-0 sm:max-h-dvh sm:min-w-lg md:min-w-3xl">
 			<div className="flex flex-col flex-1 rounded-xl overflow-y-auto shadow-[0px_0px_42px_rgba(0,0,0,0.2)] bg-zinc-100 dark:bg-gray-800">
 				<Messages isLoading={isLoading} messages={messages} ref={messagesRef} />
-				<MessageInput
-					isLoading={isLoading}
-					ref={inputRef}
-					onSendMessage={onSendMessage}
-				/>
+				<MessageInput isLoading={isLoading} ref={inputRef} onSendMessage={onSendMessage} />
 			</div>
 		</div>
 	);
