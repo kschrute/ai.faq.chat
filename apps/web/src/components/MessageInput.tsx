@@ -1,12 +1,12 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, memo, useState } from "react";
 
 interface MessageInputProps {
 	isLoading: boolean;
 	onSendMessage: (message: string) => Promise<void>;
 }
 
-const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(
-	(props, ref) => {
+const MessageInput = memo(
+	forwardRef<HTMLInputElement, MessageInputProps>((props, ref) => {
 		const { isLoading, onSendMessage } = props;
 		const [input, setInput] = useState("");
 
@@ -43,7 +43,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(
 				</form>
 			</div>
 		);
-	},
+	})
 );
 
 export default MessageInput;
