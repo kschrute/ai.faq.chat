@@ -1,7 +1,7 @@
 import type { ChatMessageContent } from "@/types";
 
 export const flattenContent = (
-	content: ChatMessageContent | undefined,
+	content: ChatMessageContent | undefined
 ): string | undefined => {
 	if (!content) {
 		return content;

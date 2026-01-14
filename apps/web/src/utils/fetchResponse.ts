@@ -2,7 +2,7 @@ import type { ChatCompletionResponse, ChatMessage } from "@/types";
 
 export const fetchResponse = async (
 	message: string,
-	history?: ChatMessage[],
+	history?: ChatMessage[]
 ): Promise<ChatCompletionResponse> => {
 	try {
 		// Build messages array in OpenAI format
