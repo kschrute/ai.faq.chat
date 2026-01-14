@@ -193,8 +193,5 @@ yarn-error.log*
 # IDE/CodeEditors
 .vscode/launch.json
 
-# Fly.io
-fly.toml
-
 # Turborepo
 .turbo
