@@ -48,7 +48,7 @@ async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
         await asyncio.sleep(Config.DEV_DELAY_SECONDS)
 
     # Delegate business logic to service layer
-    return chat_service.process_chat_request(request.messages)
+    return await chat_service.process_chat_request(request.messages)
 
 
 # Serve built frontend from /app/web_dist (copied in Docker image)

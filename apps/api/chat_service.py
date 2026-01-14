@@ -3,10 +3,12 @@ Business logic for chat/FAQ operations.
 Separates business logic from API route handlers.
 """
 
-from typing import cast
+import asyncio
+from typing import Any, cast
 
 import numpy as np
 from fastapi import HTTPException
+from sentence_transformers import SentenceTransformer
 
 import context
 import response
@@ -22,8 +24,8 @@ class ChatService:
         Initialize chat service.
 
         Args:
-            similarity_threshold: Maximum distance for considering a match valid.
-                                 Higher values = stricter matching.
+                similarity_threshold: Maximum L2 distance for considering a match valid.
+                                        Lower values = stricter matching.
         """
         self.similarity_threshold = similarity_threshold
 
@@ -32,7 +34,7 @@ class ChatService:
         Validate that the service dependencies are loaded and ready.
 
         Raises:
-            HTTPException: If model, index, or answers are not initialized.
+                HTTPException: If model, index, or answers are not initialized.
         """
         if context.model is None or context.index is None or context.answers is None:
             raise HTTPException(
@@ -52,13 +54,13 @@ class ChatService:
         Extract the user's question from the messages array.
 
         Args:
-            messages: List of chat completion messages.
+                messages: List of chat completion messages.
 
         Returns:
-            The content of the last user message.
+                The content of the last user message.
 
         Raises:
-            HTTPException: If no user message is found or content is empty.
+                HTTPException: If no user message is found or content is empty.
         """
         user_messages = [msg for msg in messages if msg.role == "user"]
         if not user_messages:
@@ -72,19 +74,20 @@ class ChatService:
 
         return last_user_message.content
 
-    def search_faq(self, question: str) -> str | None:
+    async def search_faq(self, question: str) -> str | None:
         """
         Search for the most relevant FAQ answer using semantic similarity.
+        Runs blocking model operations in a separate thread.
 
         Args:
-            question: The user's question to search for.
+                question: The user's question to search for.
 
         Returns:
-            The matching answer if found and similarity is above threshold,
-            None otherwise.
+                The matching answer if found and distance is below threshold,
+                None otherwise.
 
         Raises:
-            HTTPException: If model encoding fails.
+                HTTPException: If model encoding fails.
         """
         # Ensure model and resources are available (for mypy and runtime safety)
         if context.model is None or context.index is None or context.answers is None:
@@ -93,8 +96,29 @@ class ChatService:
                 detail="Service dependencies not initialized",
             )
 
+        # Local references for closure and type safety
+        model = cast(SentenceTransformer, context.model)
+        # Cast to Any to bypass strict type checking issues with FAISS SWIG bindings
+        index = cast(Any, context.index)
+
+        loop = asyncio.get_running_loop()
+
+        def _search_operation():
+            try:
+                # Blocking operation: Model encoding
+                embedding = model.encode([question])
+
+                # Blocking operation: FAISS search
+                distances, indices = index.search(
+                    np.array(embedding), k=Config.TOP_K_RESULTS
+                )
+                return distances, indices
+            except AttributeError as e:
+                # Will be caught and re-raised in the main loop
+                raise e
+
         try:
-            embedding = context.model.encode([question])
+            distances, indices = await loop.run_in_executor(None, _search_operation)
         except AttributeError as e:
             raise HTTPException(
                 status_code=503,
@@ -103,13 +127,13 @@ class ChatService:
                     "Model may not be properly initialized."
                 ),
             ) from e
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Error during search operation: {str(e)}"
+            ) from e
 
-        # Search for the most similar FAQ
-        distances, indices = context.index.search(
-            np.array(embedding), k=Config.TOP_K_RESULTS
-        )
-
-        # Check if similarity is above threshold
+        # Check if similarity is acceptable (distance < threshold)
+        # Note: Using L2 distance, so lower is better/more similar
         if distances[0][0] > self.similarity_threshold:
             # Distance too large = low similarity
             return None
@@ -118,7 +142,7 @@ class ChatService:
         answer = cast(str, context.answers[indices[0][0]])
         return answer
 
-    def process_chat_request(
+    async def process_chat_request(
         self, messages: list[ChatCompletionMessage]
     ) -> ChatCompletionResponse:
         """
@@ -128,13 +152,13 @@ class ChatService:
         question extraction, FAQ search, and response building.
 
         Args:
-            messages: List of chat completion messages from the request.
+                messages: List of chat completion messages from the request.
 
         Returns:
-            ChatCompletionResponse with the answer or null content if no match.
+                ChatCompletionResponse with the answer or null content if no match.
 
         Raises:
-            HTTPException: If validation fails or service is not ready.
+                HTTPException: If validation fails or service is not ready.
         """
         # Validate service is ready
         self.validate_service_ready()
@@ -143,7 +167,7 @@ class ChatService:
         question = self.extract_user_question(messages)
 
         # Search for matching FAQ
-        answer = self.search_faq(question)
+        answer = await self.search_faq(question)
 
         # Build and return response
         return response.build_chat_completion_response(content=answer)
