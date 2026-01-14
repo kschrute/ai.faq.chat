@@ -10,9 +10,21 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{js,ts,jsx,tsx,json}": [
+      "pnpm --filter @ai-faq-chat/web exec biome format --write"
+    ],
+    "apps/api/**/*.py": [
+      "uv run --project apps/api ruff format",
+      "uv run --project apps/api ruff check --fix"
+    ]
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "turbo": "^2.7.4"
   },
   "workspaces": {
