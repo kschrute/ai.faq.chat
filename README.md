@@ -20,13 +20,13 @@ The demo is avaialble at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
 To install the dependencies run:
 
 ```shell
-./install.sh
+pnpm deps
 ```
 
 And to start the API and the Web app run this after:
 
 ```shell
-./dev.sh
+pnpm dev
 ```
 
 ## Updating FAQ
@@ -34,7 +34,7 @@ And to start the API and the Web app run this after:
 If you update FAQ in the `apps/api/faq.json` file, run the following to rebuild the index:
 
 ```shell
-./build.sh
+pnpm build
 ```
 
 ## Testing the API

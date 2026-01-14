@@ -1,14 +1,15 @@
 {
-  "name": "@ai-faq-chat/api",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "uv run --env-file .env.production python embed.py",
-    "dev": "DEV=1 uv run --env-file .env.production uvicorn api:app --host 0.0.0.0 --port 8000 --reload",
-    "format": "uv run ruff format .",
-    "lint": "uv run ruff check .",
-    "lint:fix": "uv run ruff check --fix .",
-    "test": "uv run pytest",
-    "typecheck": "uv run mypy ."
-  }
+	"name": "@ai-faq-chat/api",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"deps": "uv sync --frozen",
+		"build": "uv run --env-file .env.production python embed.py",
+		"dev": "DEV=1 uv run --env-file .env.production uvicorn api:app --host 0.0.0.0 --port 8000 --reload",
+		"format": "uv run ruff format .",
+		"lint": "uv run ruff check .",
+		"lint:fix": "uv run ruff check --fix .",
+		"test": "uv run pytest",
+		"typecheck": "uv run mypy ."
+	}
 }

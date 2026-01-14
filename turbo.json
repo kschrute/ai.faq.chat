@@ -1,30 +1,51 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "ui": "tui",
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*", "uv.lock", "pyproject.toml", "pnpm-lock.yaml"],
-      "outputs": ["dist/**", "*.faiss", "answers.json", "**/__pycache__/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "format": {
-      "dependsOn": ["^format"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "lint:fix": {
-      "dependsOn": ["^lint:fix"]
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
-    }
-  }
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"deps": {
+			"dependsOn": ["^deps"]
+		},
+		"//#deps:root": {
+			"inputs": [
+				"pnpm-lock.yaml",
+				"package.json",
+				"**/package.json",
+				"pnpm-workspace.yaml",
+				".npmrc"
+			]
+		},
+		"@ai-faq-chat/api#deps": {
+			"inputs": ["uv.lock", "pyproject.toml", "**/pyproject.toml"]
+		},
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				".env*",
+				"uv.lock",
+				"pyproject.toml",
+				"pnpm-lock.yaml"
+			],
+			"outputs": ["dist/**", "*.faiss", "answers.json", "**/__pycache__/**"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"format": {
+			"dependsOn": ["^format"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"lint:fix": {
+			"dependsOn": ["^lint:fix"]
+		},
+		"test": {
+			"dependsOn": ["^build"]
+		},
+		"typecheck": {
+			"dependsOn": ["^typecheck"]
+		}
+	}
 }
