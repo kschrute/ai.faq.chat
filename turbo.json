@@ -11,6 +11,9 @@
       "cache": false,
       "persistent": true
     },
+    "format": {
+      "dependsOn": ["^format"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
@@ -18,7 +21,7 @@
       "dependsOn": ["^build"]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^typecheck"]
     }
   }
 }
