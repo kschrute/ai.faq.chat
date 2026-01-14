@@ -17,7 +17,7 @@ export const isJSON = (value: unknown) => {
 		try {
 			JSON.stringify(value);
 			return true;
-		} catch (err) {
+		} catch {
 			return false;
 		}
 	}
