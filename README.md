@@ -108,17 +108,3 @@ The response should be:
   }
 }
 ```
-
-## Running in Docker
-
-To build and run execute:
-
-```shell
-docker stop ai-faq-chat && docker rm ai-faq-chat
-```
-
-To stop and cleanup:
-
-```shell
-docker stop ai-faq-chat && docker rm ai-faq-chat
-```
