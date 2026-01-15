@@ -1,5 +1,7 @@
 # FAQ Chat
 
+[![CI/CD](https://github.com/kschrute/ai-faq-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/kschrute/ai-faq-chat/actions/workflows/ci.yml)
+
 Question-answering system for an FAQ without fine-tuning a language model. Instead of training a model, it uses Retrieval-Augmented Generation (RAG), leveraging a pre-trained embedding model and a vector search index to retrieve answers from a pre-existing FAQ dataset. 
 
 This approach is simpler and faster to set up than fine-tuning, as it requires no model training, making it ideal for small FAQ datasets or rapid prototyping. It embeds FAQ questions into a vector space, searches for the most similar question to a user’s query, and returns the corresponding answer. If no sufficiently similar question is found, it returns `false`.
