@@ -46,7 +46,7 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: lint
-    name: Deploy app
+    name: Deploy
     runs-on: ubuntu-latest
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
