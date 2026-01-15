@@ -18,14 +18,8 @@
 			"inputs": ["uv.lock", "pyproject.toml", "**/pyproject.toml"]
 		},
 		"build": {
-			"dependsOn": ["^build"],
-			"inputs": [
-				"$TURBO_DEFAULT$",
-				".env*",
-				"uv.lock",
-				"pyproject.toml",
-				"pnpm-lock.yaml"
-			],
+			"dependsOn": ["//#deps:root", "deps", "^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"outputs": ["dist/**", "*.faiss", "answers.json", "**/__pycache__/**"]
 		},
 		"dev": {
