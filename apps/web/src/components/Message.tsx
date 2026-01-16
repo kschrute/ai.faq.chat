@@ -22,4 +22,6 @@ const Message = React.memo(({ message }: { message: ChatMessage }) => {
 	);
 });
 
+Message.displayName = "Message";
+
 export default Message;
