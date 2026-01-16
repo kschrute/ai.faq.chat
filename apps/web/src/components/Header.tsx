@@ -6,4 +6,13 @@ function Header() {
 	);
 }
 
+Header.displayName = "Header";
+Header.whyDidYouRender = {
+	collapseGroups: true,
+	logOnDifferentValues: true,
+	onlyLogs: true,
+	trackAllPureComponents: true,
+	trackHooks: true,
+};
+
 export default Header;
