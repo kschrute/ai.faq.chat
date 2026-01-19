@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fetchResponse, flattenContent } from "@/utils";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
-import { fetchResponse, flattenContent } from "@/utils";
 import type { ChatMessage } from "@/types";
 
-export default function Chat() {
+function Chat() {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const messagesRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -102,3 +102,7 @@ export default function Chat() {
 		</div>
 	);
 }
+
+Chat.displayName = "Chat";
+
+export default Chat;
