@@ -2,46 +2,101 @@
 
 [![CI/CD](https://github.com/kschrute/ai-faq-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/kschrute/ai-faq-chat/actions/workflows/ci.yml)
 
-Question-answering system for an FAQ without fine-tuning a language model. Instead of training a model, it uses Retrieval-Augmented Generation (RAG), leveraging a pre-trained embedding model and a vector search index to retrieve answers from a pre-existing FAQ dataset. 
+A lightweight, privacy-focused question-answering system using Retrieval-Augmented Generation (RAG).
 
-This approach is simpler and faster to set up than fine-tuning, as it requires no model training, making it ideal for small FAQ datasets or rapid prototyping. It embeds FAQ questions into a vector space, searches for the most similar question to a user’s query, and returns the corresponding answer. If no sufficiently similar question is found, it returns `false`.
+Instead of fine-tuning a Large Language Model (LLM), this project leverages **Sentence Transformers** to embed questions and **FAISS** for similarity search. This approach is:
+- **Fast:** No heavy model inference.
+- **Private:** Runs entirely locally (or on your server).
+- **Deterministic:** Returns pre-written answers, eliminating hallucinations.
+- **Easy to Update:** Just add to a JSON file and rebuild the index.
+
+## Features
+
+- 🧠 **Semantic Search:** Understands the intent behind questions, not just keywords.
+- 🚀 **Modern Stack:** Built with Turborepo, React 19, Vite, FastAPI, and Python.
+- ⚡ **High Performance:** Uses FAISS for efficient vector similarity search.
+- 🐳 **Docker Ready:** Includes Dockerfile and Fly.io configuration for easy deployment.
 
 ## Demo
 
-The demo is avaialble at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
+The demo is available at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
 
 ![Demo](demo.jpeg)
 
+## Architecture
+
+The project is structured as a monorepo managed by **Turborepo**:
+
+- `apps/api`: Python (FastAPI) backend. Handles embeddings (SentenceTransformers) and vector search (FAISS).
+- `apps/web`: React 19 (Vite) frontend. Uses UnoCSS for styling.
+- `packages/`: Shared configurations (TypeScript, etc.).
+
+For a detailed deep-dive into the AI architecture, see [AGENTS.md](./AGENTS.md).
+
 ## Prerequisites
 
-- [pnpm](https://pnpm.io)
-- [uv](https://astral.sh/uv)
+- [pnpm](https://pnpm.io) (Package manager)
+- [uv](https://astral.sh/uv) (Python toolchain)
 
 ## Getting Started
 
-To install the dependencies run:
+1. **Install Dependencies**
+   
+   This command installs Node.js dependencies and sets up the Python virtual environments via `uv`.
 
-```shell
-pnpm deps
-```
+   ```shell
+   pnpm deps
+   ```
 
-And to start the API and the Web app run this after:
+2. **Start Development Server**
 
-```shell
-pnpm dev
-```
+   Starts both the API (port 8000) and Web App (port 5173).
 
-## Updating FAQ
+   ```shell
+   pnpm dev
+   ```
+   
+   - Web App: [http://localhost:5173](http://localhost:5173)
+   - API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-If you update FAQ in the `apps/api/faq.json` file, run the following to rebuild the index:
+## Managing Content
 
-```shell
-pnpm build
-```
+### Updating the FAQ
 
-## Testing the API
+1. Edit the source file at `apps/api/faq.json`.
+   ```json
+   [
+     {
+       "question": "How do I reset my password?",
+       "answer": "Go to settings and click 'Reset Password'."
+     }
+   ]
+   ```
 
-You can use `curl` to test the API or use the UI at http://localhost:5173
+2. Rebuild the vector index:
+   ```shell
+   pnpm build
+   ```
+   This generates the embeddings and updates the FAISS index (`apps/api/index.faiss`).
+
+### Configuration
+
+You can tweak the model and similarity thresholds in `apps/api/config.py`:
+- `SIMILARITY_THRESHOLD`: Adjust matching strictness (default: 0.85).
+- `MODEL_NAME`: Change the embedding model (default: `all-MiniLM-L6-v2`).
+
+## Development Commands
+
+- **Build:** `pnpm build` (Builds web assets and vector index)
+- **Lint:** `pnpm lint` (Runs Biome for JS/TS and Ruff for Python)
+- **Typecheck:** `pnpm typecheck`
+- **Test:** `pnpm test`
+
+## API Usage
+
+The API is compatible with the OpenAI Chat Completion format, making it easy to integrate with existing tools.
+
+**Example Request:**
 
 ```shell
 curl -X POST http://localhost:8000/chat \
@@ -49,62 +104,21 @@ curl -X POST http://localhost:8000/chat \
     -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "How do I reset my password?"}]}'
 ```
 
-You should see a response like this:
+**Example Response:**
 
 ```json
 {
-  "id": "chatcmpl-ad02cfa696a1",
+  "id": "chatcmpl-...",
   "object": "chat.completion",
   "created": 1768231509,
   "model": "faq-chat",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": "Go to settings and click 'Reset Password'."
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "total_tokens": 0
-  }
-}
-```
-
-And if you ask something that's not in the FAQ:
-
-```shell
-curl -X POST http://localhost:8000/chat \
-    -H "Content-Type: application/json" \
-    -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "What is quantum computing?"}]}'
-```
-
-The response should be:
-
-```json
-{
-  "id": "chatcmpl-8d069d933415",
-  "object": "chat.completion",
-  "created": 1768231526,
-  "model": "faq-chat",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": null
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "total_tokens": 0
-  }
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "Go to settings and click 'Reset Password'."
+    },
+    "finish_reason": "stop"
+  }]
 }
 ```
