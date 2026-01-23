@@ -8,9 +8,62 @@ This approach is simpler and faster to set up than fine-tuning, as it requires n
 
 ## Demo
 
-The demo is avaialble at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
+The demo is available at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
 
 ![Demo](demo.jpeg)
+
+## Tech Stack
+
+### Frontend (apps/web)
+- **React 19** with TypeScript
+- **Vite** for build tooling and dev server
+- **UnoCSS** for utility-first CSS
+- **React Compiler** for automatic optimization
+
+### Backend (apps/api)
+- **FastAPI** for the REST API
+- **FAISS** (Facebook AI Similarity Search) for vector similarity search
+- **Sentence Transformers** for text embeddings
+- **Python 3.11+** with type hints
+- **uv** for fast Python package management
+
+### Tooling
+- **pnpm** for JavaScript package management
+- **Turbo** for monorepo build orchestration
+- **Biome** for JavaScript/TypeScript formatting
+- **Ruff** for Python linting and formatting
+- **Husky** for git hooks
+
+## How It Works
+
+This system uses **Retrieval-Augmented Generation (RAG)** to answer FAQ questions without requiring model fine-tuning:
+
+1. **Embedding Generation**: FAQ questions are converted into high-dimensional vectors using a pre-trained sentence transformer model
+2. **Vector Indexing**: These embeddings are stored in a FAISS index for efficient similarity search
+3. **Query Processing**: When a user asks a question, it's embedded using the same model
+4. **Similarity Search**: The system searches the FAISS index to find the most similar FAQ question
+5. **Answer Retrieval**: If the similarity score exceeds a threshold, the corresponding answer is returned; otherwise, `null` is returned
+
+This approach is faster to implement than fine-tuning and doesn't require training data or GPU resources.
+
+## Project Structure
+
+This is a monorepo managed with pnpm workspaces and Turbo:
+
+```
+ai-faq-chat/
+├── apps/
+│   ├── api/          # FastAPI backend
+│   │   ├── api.py           # Main API endpoints
+│   │   ├── chat_service.py  # Chat logic and embedding search
+│   │   ├── embed.py         # Script to generate embeddings
+│   │   ├── faq.json         # FAQ questions and answers
+│   │   └── index.faiss      # FAISS vector index (generated)
+│   └── web/          # React frontend
+│       └── src/             # React application source
+├── packages/         # Shared packages (if any)
+└── turbo.json        # Turbo configuration
+```
 
 ## Prerequisites
 
