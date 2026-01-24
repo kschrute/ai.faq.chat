@@ -2,7 +2,7 @@ import time
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ChatCompletionMessage(BaseModel):
@@ -10,6 +10,15 @@ class ChatCompletionMessage(BaseModel):
 
     role: Literal["assistant", "user", "system"]
     content: str | None
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if len(v) > 10000:
+            raise ValueError("Message content exceeds maximum length of 10000")
+        return v.strip()
 
 
 class ChatCompletionChoice(BaseModel):

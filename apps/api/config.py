@@ -70,7 +70,3 @@ class Config:
             except ValueError:
                 pass
         return Config.SIMILARITY_THRESHOLD
-
-
-# Create a singleton config instance
-config = Config()

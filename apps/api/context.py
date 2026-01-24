@@ -2,25 +2,30 @@ import json
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import cast
 
 import faiss
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from sentence_transformers import SentenceTransformer
 
 from config import Config
 
-# Global variables to store loaded model and data
-model: SentenceTransformer | None = None
-index: faiss.Index | None = None
-answers: list[str] | None = None
+
+@dataclass
+class AppContext:
+    """Application context holding ML model and FAQ data."""
+
+    model: SentenceTransformer
+    index: faiss.Index
+    answers: list[str]
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """FastAPI lifespan context manager for startup/shutdown."""
     # Startup: Load model and data once when app starts
-    global model, index, answers
     try:
         print("Loading ML model and FAQ data...")
 
@@ -31,30 +36,32 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # Load model with memory-efficient settings
         model = SentenceTransformer(
             Config.get_model_name(),
-            device="cpu",  # Explicitly use CPU
-            model_kwargs={
-                "dtype": torch.float32
-            },  # Use float32 instead of float16 for CPU
+            device="cpu",
+            model_kwargs={"dtype": torch.float32},
         )
         model.eval()  # Set to evaluation mode to reduce memory
 
         index = faiss.read_index(Config.FAISS_INDEX_PATH)
         with open(Config.ANSWERS_JSON_PATH) as f:
             answers = cast(list[str], json.load(f))
+
+        app.state.context = AppContext(model=model, index=index, answers=answers)
         print("ML model and FAQ data loaded successfully!")
     except Exception as e:
         print(f"Error loading model or data: {e}")
-        # Keep model, index, answers as None - endpoints will return 503
-        model = None
-        index = None
-        answers = None
+        app.state.context = None
 
     yield
-    # Shutdown: Cleanup if needed (optional)
+
+    # Shutdown: Cleanup
     print("Shutting down...")
-    # Clear model from memory
-    if model is not None:
-        del model
+    if hasattr(app.state, "context") and app.state.context is not None:
+        del app.state.context
         import gc
 
         gc.collect()
+
+
+def get_context(request: Request) -> AppContext | None:
+    """Dependency to get the application context from request."""
+    return getattr(request.app.state, "context", None)

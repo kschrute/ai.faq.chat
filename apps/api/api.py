@@ -1,16 +1,17 @@
 import asyncio
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-import context
 from chat_service import ChatService
 from config import Config
+from context import AppContext, get_context, lifespan
 from response import ChatCompletionMessage, ChatCompletionResponse
 
-app = FastAPI(lifespan=context.lifespan)
+app = FastAPI(lifespan=lifespan)
 
 # Initialize chat service
 chat_service = ChatService(similarity_threshold=Config.get_similarity_threshold())
@@ -35,9 +36,26 @@ class ChatCompletionRequest(BaseModel):
     max_tokens: int | None = None
     stream: bool | None = None
 
+    @field_validator("messages")
+    @classmethod
+    def validate_messages(
+        cls, v: list[ChatCompletionMessage]
+    ) -> list[ChatCompletionMessage]:
+        if not v:
+            raise ValueError("Messages array cannot be empty")
+        if len(v) > 100:
+            raise ValueError("Messages array exceeds maximum length of 100")
+        for i, msg in enumerate(v):
+            if msg.content and len(msg.content) > 1000:
+                raise ValueError(f"Message at index {i} exceeds maximum length of 1000")
+        return v
+
 
 @app.post("/chat", response_model=ChatCompletionResponse)
-async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
+async def chat(
+    request: ChatCompletionRequest,
+    ctx: Annotated[AppContext | None, Depends(get_context)],
+) -> ChatCompletionResponse:
     """
     Handle chat completion requests.
 
@@ -48,7 +66,7 @@ async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
         await asyncio.sleep(Config.DEV_DELAY_SECONDS)
 
     # Delegate business logic to service layer
-    return await chat_service.process_chat_request(request.messages)
+    return await chat_service.process_chat_request(request.messages, ctx)
 
 
 # Serve built frontend from /app/web_dist (copied in Docker image)
