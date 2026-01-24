@@ -4,21 +4,23 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from config import Config
+from settings import settings
 
 
 class ChatCompletionMessage(BaseModel):
     """OpenAI chat completion message format."""
 
     role: Literal["assistant", "user", "system"]
-    content: str | None = Field(default=None, max_length=Config.MAX_QUESTION_LENGTH)
+    content: str | None = Field(default=None, max_length=settings.max_question_length)
 
 
 class ChatCompletionRequest(BaseModel):
     """OpenAI chat completion request format."""
 
     model: str | None = None
-    messages: list[ChatCompletionMessage] = Field(max_length=Config.MAX_MESSAGES_LIMIT)
+    messages: list[ChatCompletionMessage] = Field(
+        max_length=settings.max_messages_limit
+    )
     # Optional fields for OpenAI compatibility (not used but accepted)
     temperature: float | None = None
     max_tokens: int | None = None

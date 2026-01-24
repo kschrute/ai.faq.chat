@@ -1,28 +1,49 @@
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-import context
 from chat_service import ChatService
-from config import Config
+from engine import FAQEngine
 from exceptions import InvalidInputError, ModelError, ServiceNotReadyError
 from response import ChatCompletionRequest, ChatCompletionResponse
+from settings import settings
 
-app = FastAPI(lifespan=context.lifespan)
 
-# Initialize chat service
-chat_service = ChatService(similarity_threshold=Config.get_similarity_threshold())
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Manage the lifecycle of the application resources.
+    Initializes the FAQ Engine on startup and cleans up on shutdown.
+    """
+    # Initialize and load the engine
+    engine = FAQEngine()
+    engine.load_resources()
+
+    # Store engine in app state for dependency injection
+    app.state.engine = engine
+
+    yield
+
+    # Cleanup (if any needed in future)
+    pass
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=Config.get_cors_origins(),
-    allow_credentials=Config.CORS_ALLOW_CREDENTIALS,
-    allow_methods=Config.CORS_ALLOW_METHODS,
-    allow_headers=Config.CORS_ALLOW_HEADERS,
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
 )
 
 
@@ -54,25 +75,36 @@ async def invalid_input_handler(
     )
 
 
+def get_chat_service(request: Request) -> ChatService:
+    """
+    Dependency provider for ChatService.
+    Injects the shared FAQEngine instance from app state.
+    """
+    return ChatService(engine=request.app.state.engine)
+
+
 @app.post("/chat", response_model=ChatCompletionResponse)
-async def chat(request: ChatCompletionRequest) -> ChatCompletionResponse:
+async def chat(
+    request: ChatCompletionRequest,
+    service: Annotated[ChatService, Depends(get_chat_service)],
+) -> ChatCompletionResponse:
     """
     Handle chat completion requests.
 
     Processes user messages and returns FAQ answers using semantic similarity search.
     """
     # Add a delay in development mode
-    if Config.is_dev_mode():
-        await asyncio.sleep(Config.DEV_DELAY_SECONDS)
+    if settings.debug:
+        await asyncio.sleep(settings.dev_delay_seconds)
 
     # Delegate business logic to service layer
-    return await chat_service.process_chat_request(request.messages)
+    return await service.process_chat_request(request.messages)
 
 
 # Serve built frontend from /app/web_dist (copied in Docker image)
 try:
     app.mount(
-        "/", StaticFiles(directory=Config.WEB_DIST_PATH, html=True), name="static"
+        "/", StaticFiles(directory=settings.web_dist_path, html=True), name="static"
     )
 except Exception:
     # In dev or if assets missing, skip mounting

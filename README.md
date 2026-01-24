@@ -7,6 +7,7 @@ A lightweight, production-ready FAQ question-answering system powered by Retriev
 ## Why This Approach?
 
 Unlike traditional chatbots that require fine-tuning language models, this system:
+
 - **Zero Training Required**: Uses pre-trained embeddings and semantic search
 - **Instant Updates**: Add new FAQs without retraining models
 - **Predictable Responses**: Returns exact FAQ answers or gracefully declines
@@ -50,7 +51,7 @@ pnpm build
 
 ## Testing the API
 
-You can use `curl` to test the API or use the UI at http://localhost:5173
+You can use `curl` to test the API or use the UI at <http://localhost:5173>
 
 ```shell
 curl -X POST http://localhost:8000/chat \
@@ -168,6 +169,7 @@ pnpm build
 ```
 
 This creates:
+
 - Optimized frontend bundle in `apps/web/dist/`
 - FAISS index and embeddings in `apps/api/`
 
@@ -177,9 +179,9 @@ Create a `.env` file in `apps/api/`:
 
 ```env
 # Optional: Adjust these settings
-MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
-SIMILARITY_THRESHOLD=0.85
-CORS_ORIGINS=http://localhost:5173,https://yourdomain.com
+MODEL_NAME=all-MiniLM-L6-v2
+SIMILARITY_THRESHOLD=0.9
+CORS_ORIGINS=["http://localhost:5173","https://yourdomain.com"]
 ```
 
 ### Docker Deployment
@@ -194,11 +196,13 @@ docker run -p 8000:8000 -p 5173:5173 faq-chat
 ### Deploy to Fly.io
 
 1. Install Fly CLI:
+
 ```shell
 curl -L https://fly.io/install.sh | sh
 ```
 
-2. Deploy:
+1. Deploy:
+
 ```shell
 fly launch
 fly deploy
@@ -213,7 +217,8 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Questions that should have answers return `null`
 
 **Solutions:**
-- Lower `SIMILARITY_THRESHOLD` in `apps/api/config.py` (try 0.80 or 0.75)
+
+- Lower `SIMILARITY_THRESHOLD` in `apps/api/settings.py` or via environment variable (try 0.8 or lower)
 - Check that the question exists in `apps/api/faq.json`
 - Verify the index was rebuilt after FAQ changes: `pnpm build`
 
@@ -222,7 +227,8 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Questions return answers for different questions
 
 **Solutions:**
-- Raise `SIMILARITY_THRESHOLD` in `apps/api/config.py` (try 0.90)
+
+- Raise `SIMILARITY_THRESHOLD` in `apps/api/settings.py` or via environment variable (try 1.0 or higher)
 - Review similar questions in FAQ - they may be too similar
 - Consider rewording FAQ questions to be more distinct
 
@@ -231,6 +237,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Responses take >500ms
 
 **Solutions:**
+
 - Check system resources (CPU, memory)
 - Use a smaller embedding model (current: `all-MiniLM-L6-v2`)
 - Reduce concurrent request load
@@ -241,6 +248,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** `pnpm build` errors or index.faiss not created
 
 **Solutions:**
+
 - Verify `faq.json` is valid JSON
 - Check Python dependencies are installed: `cd apps/api && uv sync`
 - Ensure sufficient disk space for embeddings
@@ -251,6 +259,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** `ModuleNotFoundError` or import errors
 
 **Solutions:**
+
 - Reinstall dependencies: `pnpm deps`
 - Verify uv is installed: `uv --version`
 - Check Python version: `python3 --version` (requires 3.11+)
@@ -260,6 +269,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 For detailed information about the agent architecture, see [AGENTS.md](./AGENTS.md).
 
 Key architectural decisions:
+
 - **RAG over Fine-tuning**: No model training required, instant updates
 - **FAISS**: Fast vector search, memory-efficient, Python-friendly
 - **Sentence Transformers**: Pre-trained on similarity tasks, good quality
