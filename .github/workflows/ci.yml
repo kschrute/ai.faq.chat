@@ -44,7 +44,7 @@ jobs:
         run: pnpm test
 
   build:
-    needs: lint
+    needs: test
     name: Build
     runs-on: ubuntu-latest
     steps:
