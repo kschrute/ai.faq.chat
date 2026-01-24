@@ -15,6 +15,7 @@ The core agent is a semantic search system that matches user queries to FAQ ques
 **Location:** `apps/api/chat_service.py`
 
 **Key Features:**
+
 - Embeds user questions using Sentence Transformers
 - Searches a FAISS vector index for similar questions
 - Returns pre-written answers when similarity exceeds threshold
@@ -38,20 +39,27 @@ Answer Retrieval / Null Response
 
 ## Components Breakdown
 
-### Embedding Model
+### FAQ Engine
 
-**Model:** `sentence-transformers/all-MiniLM-L6-v2`
+**Location:** `apps/api/engine.py`
+
+The `FAQEngine` class encapsulates all RAG logic: model loading, embedding generation, and vector search.
+
+**Model:** `all-MiniLM-L6-v2`
 **Purpose:** Converts text questions into 384-dimensional vectors
-**Location:** `apps/api/embed.py`
-
-The embedding model creates semantic representations of questions, allowing the system to find questions with similar meaning even if they use different words.
 
 ```python
-def embed(text: str) -> list[float]:
-    """Embed text using the sentence-transformers model."""
-    embeddings = model.encode([text])
-    return embeddings[0].tolist()
+class FAQEngine:
+    """Encapsulates the RAG logic: model loading, embedding, and vector search."""
+
+    def load_resources(self) -> None:
+        """Load the ML model, FAISS index, and answer map."""
+
+    async def asearch(self, query: str) -> str | None:
+        """Async wrapper for the blocking search operation."""
 ```
+
+The embedding model creates semantic representations of questions, allowing the system to find questions with similar meaning even if they use different words.
 
 ### Vector Index
 
@@ -62,12 +70,14 @@ def embed(text: str) -> list[float]:
 The FAISS index stores pre-computed embeddings of all FAQ questions, enabling fast similarity search at query time.
 
 **Index Building Process:**
+
 1. Load FAQ questions from `apps/api/faq.json`
 2. Generate embeddings for each question
 3. Build FAISS index from embeddings
 4. Save index to disk
 
 **Build Command:**
+
 ```bash
 pnpm build
 ```
@@ -77,24 +87,28 @@ pnpm build
 **Location:** `apps/api/chat_service.py`
 **API Endpoint:** `POST /chat`
 
-The chat service implements the OpenAI Chat Completions API format for compatibility with existing tools and clients.
+The `ChatService` class orchestrates request processing and delegates search to `FAQEngine`.
 
-**Key Functions:**
+**Key Methods:**
 
-#### `search_faq(question: str) -> str | None`
-Searches the FAQ index for a matching question and returns the answer if found.
+#### `process_chat_request(messages: list[ChatCompletionMessage]) -> ChatCompletionResponse`
 
-**Algorithm:**
+Processes incoming chat requests and returns responses in OpenAI API format.
+
+#### `_extract_user_question(messages: list[ChatCompletionMessage]) -> str`
+
+Extracts the last user message from the conversation history.
+
+**Search Algorithm (in FAQEngine):**
+
 1. Embed the user's question
 2. Search FAISS index for nearest neighbor
-3. Calculate similarity score (1 / (1 + distance))
-4. If similarity > threshold (0.85), return answer
+3. Check L2 distance against threshold
+4. If distance < threshold (0.9), return answer
 5. Otherwise, return `None`
 
-#### `process_chat_completion(request: ChatCompletionRequest) -> ChatCompletionResponse`
-Processes incoming chat requests and formats responses in OpenAI API format.
-
 **Request Format:**
+
 ```json
 {
   "model": "faq-chat",
@@ -105,6 +119,7 @@ Processes incoming chat requests and formats responses in OpenAI API format.
 ```
 
 **Response Format:**
+
 ```json
 {
   "id": "chatcmpl-...",
@@ -129,17 +144,40 @@ Processes incoming chat requests and formats responses in OpenAI API format.
 
 ### Configuration
 
-**Location:** `apps/api/config.py`
+**Location:** `apps/api/settings.py`
 
-Key configuration parameters:
+Configuration uses Pydantic Settings with environment variable support.
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `MODEL_NAME` | `all-MiniLM-L6-v2` | Sentence transformer model |
-| `SIMILARITY_THRESHOLD` | `0.85` | Minimum similarity score to return answer |
-| `FAQ_FILE` | `faq.json` | Source FAQ data file |
-| `INDEX_FILE` | `index.faiss` | FAISS index file |
-| `ANSWERS_FILE` | `answers.json` | Cached answers mapping |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `model_name` | `all-MiniLM-L6-v2` | Sentence transformer model |
+| `similarity_threshold` | `0.9` | Maximum L2 distance to return answer (lower = stricter) |
+| `top_k_results` | `1` | Number of results to retrieve |
+| `faiss_index_path` | `index.faiss` | FAISS index file |
+| `answers_json_path` | `answers.json` | Cached answers mapping |
+| `max_question_length` | `1000` | Maximum input question length |
+| `max_messages_limit` | `20` | Maximum messages per request |
+
+### Response Models
+
+**Location:** `apps/api/response.py`
+
+Pydantic models for OpenAI-compatible request/response formats:
+
+- `ChatCompletionMessage`
+- `ChatCompletionRequest`
+- `ChatCompletionResponse`
+- `build_chat_completion_response()` helper function
+
+### Exceptions
+
+**Location:** `apps/api/exceptions.py`
+
+Custom exceptions for error handling:
+
+- `ServiceNotReadyError`: Model/index not loaded
+- `ModelError`: ML model failures
+- `InvalidInputError`: Input validation failures
 
 ## Data Flow
 
@@ -148,24 +186,26 @@ Key configuration parameters:
 ```
 1. Client sends POST /chat request
    ↓
-2. Extract user message from request
+2. FastAPI injects ChatService with FAQEngine
    ↓
-3. search_faq(question)
+3. ChatService.process_chat_request(messages)
    ↓
-4. embed(question) → query_vector
+4. Extract last user message
    ↓
-5. FAISS search(query_vector) → (distance, index)
+5. FAQEngine.asearch(question)
    ↓
-6. Calculate similarity score
+6. Embed question → query_vector
    ↓
-7. If similarity > 0.85:
-      Return answer from answers.json
+7. FAISS search(query_vector) → (distance, index)
+   ↓
+8. If distance < 0.9:
+      Return answer from answers list
    Else:
       Return null
    ↓
-8. Format as ChatCompletionResponse
+9. build_chat_completion_response(answer)
    ↓
-9. Return JSON response to client
+10. Return JSON response to client
 ```
 
 ### Index Building Flow
@@ -206,6 +246,7 @@ Key configuration parameters:
 ### Adding New FAQs
 
 1. Edit `apps/api/faq.json`:
+
 ```json
 [
   {
@@ -215,34 +256,47 @@ Key configuration parameters:
 ]
 ```
 
-2. Rebuild the index:
+1. Rebuild the index:
+
 ```bash
 pnpm build
 ```
 
 ### Adjusting Similarity Threshold
 
-Edit `apps/api/config.py`:
+Edit `apps/api/settings.py` or set via environment variable:
 
 ```python
-SIMILARITY_THRESHOLD = 0.80  # Lower = more permissive, Higher = stricter
+# In settings.py
+similarity_threshold: float = 0.8  # Lower = stricter, Higher = more permissive
+
+# Or via environment variable
+# SIMILARITY_THRESHOLD=0.8
 ```
 
+**Note:** This is an L2 distance threshold (lower distance = more similar).
+
 **Recommendations:**
-- `0.90+`: Very strict, only near-exact matches
-- `0.85`: Default, good balance
-- `0.75-0.80`: More permissive, may return less relevant answers
-- `<0.75`: Too permissive, likely to return incorrect answers
+
+- `0.5-0.7`: Very strict, only near-exact matches
+- `0.9`: Default, good balance
+- `1.0-1.2`: More permissive, may return less relevant answers
+- `>1.5`: Too permissive, likely to return incorrect answers
 
 ### Using a Different Embedding Model
 
-Edit `apps/api/config.py`:
+Edit `apps/api/settings.py` or set via environment variable:
 
 ```python
-MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"  # Higher quality, slower
+# In settings.py
+model_name: str = "all-mpnet-base-v2"  # Higher quality, slower
+
+# Or via environment variable
+# MODEL_NAME=all-mpnet-base-v2
 ```
 
 **Alternative Models:**
+
 - `all-MiniLM-L6-v2`: Fast, 384 dimensions (current)
 - `all-mpnet-base-v2`: Higher quality, 768 dimensions
 - `multi-qa-MiniLM-L6-cos-v1`: Optimized for question answering
@@ -270,7 +324,7 @@ After changing the model, rebuild the index with `pnpm build`.
 - **Exact Match:** 100% (identical questions)
 - **Paraphrased Questions:** 85-95% (similar phrasing)
 - **Related Questions:** 60-80% (related concepts)
-- **Unrelated Questions:** 5-10% false positives with threshold 0.85
+- **Unrelated Questions:** 5-10% false positives with threshold 0.9
 
 ## API Compatibility
 
@@ -306,6 +360,7 @@ print(response.choices[0].message.content)
 **Location:** `apps/api/tests/`
 
 Run tests:
+
 ```bash
 pnpm test
 ```
@@ -313,6 +368,7 @@ pnpm test
 ### Manual Testing
 
 Test the agent directly:
+
 ```bash
 curl -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \
@@ -324,6 +380,7 @@ curl -X POST http://localhost:8000/chat \
 ### Logging
 
 The API logs all requests and responses. Check logs for:
+
 - Query embeddings
 - Similarity scores
 - Retrieved answers
@@ -331,6 +388,7 @@ The API logs all requests and responses. Check logs for:
 ### Debug Mode
 
 Set environment variable for verbose logging:
+
 ```bash
 export LOG_LEVEL=DEBUG
 ```
@@ -338,14 +396,17 @@ export LOG_LEVEL=DEBUG
 ### Common Issues
 
 **Issue:** Agent returns `null` for questions that should match
-- **Solution:** Lower `SIMILARITY_THRESHOLD` in config.py
+
+- **Solution:** Raise `similarity_threshold` in settings.py (L2 distance, so higher = more permissive)
 - **Check:** Verify question exists in faq.json
 
 **Issue:** Agent returns incorrect answers
-- **Solution:** Raise `SIMILARITY_THRESHOLD`
+
+- **Solution:** Lower `similarity_threshold` (stricter matching)
 - **Check:** Review similar questions in FAQ, may need rewording
 
 **Issue:** Slow response times
+
 - **Solution:** Use smaller embedding model or optimize FAISS index
 - **Check:** System resources and concurrent request load
 
@@ -366,6 +427,7 @@ Potential improvements to the agent system:
 ### Why RAG Instead of Fine-tuning?
 
 **Advantages:**
+
 - No model training required
 - Instant updates when FAQ changes
 - Lower computational requirements
@@ -373,6 +435,7 @@ Potential improvements to the agent system:
 - Cost-effective for small datasets
 
 **Trade-offs:**
+
 - Limited to FAQ content
 - Cannot generate creative answers
 - Requires good FAQ coverage

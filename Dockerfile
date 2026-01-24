@@ -106,4 +106,4 @@ ENV PORT=8000
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "/app/apps/api/.venv/bin/python -m uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "/app/apps/api/.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

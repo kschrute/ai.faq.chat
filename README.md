@@ -7,6 +7,7 @@ A lightweight, production-ready FAQ question-answering system powered by Retriev
 ## Why This Approach?
 
 Unlike traditional chatbots that require fine-tuning language models, this system:
+
 - **Zero Training Required**: Uses pre-trained embeddings and semantic search
 - **Instant Updates**: Add new FAQs without retraining models
 - **Predictable Responses**: Returns exact FAQ answers or gracefully declines
@@ -17,277 +18,40 @@ Perfect for small to medium FAQ datasets (up to ~10,000 questions) where predict
 
 ## Live Demo
 
-Try it out: [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
+The demo is avaialble at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.dev)
 
 ![Demo](demo.jpeg)
 
-## Features
-
-- **Semantic Search**: Understands questions phrased differently than FAQ entries
-- **OpenAI-Compatible API**: Drop-in replacement for OpenAI Chat Completions API
-- **Fast Response Times**: 50-200ms average latency
-- **Adjustable Similarity Threshold**: Control answer precision vs. recall
-- **Graceful Degradation**: Returns `null` for out-of-scope questions
-- **Modern Stack**: React 19, FastAPI, and efficient vector search
-
-## Tech Stack
-
-### Frontend (`apps/web`)
-- **React 19** with TypeScript for type-safe UI development
-- **Vite** for lightning-fast dev server and optimized builds
-- **UnoCSS** for utility-first CSS with minimal overhead
-- **React Compiler** for automatic performance optimization
-
-### Backend (`apps/api`)
-- **FastAPI** for high-performance REST API
-- **FAISS** for efficient vector similarity search (Facebook AI Similarity Search)
-- **Sentence Transformers** (`all-MiniLM-L6-v2`) for text embeddings
-- **Python 3.11+** with full type hints for reliability
-- **uv** for blazing-fast Python package management
-
-### Developer Tools
-- **pnpm** for efficient JavaScript package management
-- **Turbo** for optimized monorepo build orchestration
-- **Biome** for fast JavaScript/TypeScript formatting and linting
-- **Ruff** for lightning-fast Python linting and formatting
-- **Husky** for automated git hooks and pre-commit checks
-
-## How It Works
-
-This system uses **Retrieval-Augmented Generation (RAG)** without the generation part—pure semantic retrieval:
-
-```
-User Question → Embedding Model → Query Vector → FAISS Search → Answer Lookup
-```
-
-### Step-by-Step Process
-
-1. **Index Building** (one-time setup):
-   - Load FAQ questions from `faq.json`
-   - Generate 384-dimensional embeddings using Sentence Transformers
-   - Build FAISS index for fast similarity search
-
-2. **Query Processing** (runtime):
-   - User submits a question via the chat interface
-   - Question is embedded into a vector using the same model
-   - FAISS finds the nearest FAQ question in vector space
-   - Calculate similarity score: `1 / (1 + distance)`
-
-3. **Answer Selection**:
-   - **If similarity ≥ 0.85**: Return the corresponding FAQ answer
-   - **If similarity < 0.85**: Return `null` (no confident match)
-
-### Why This Works
-
-The embedding model maps semantically similar questions close together in vector space, so:
-- "How do I reset my password?" 
-- "I forgot my password, what should I do?"
-- "Password reset procedure?"
-
-All map to nearby vectors and retrieve the same answer.
-
-## Project Structure
-
-This is a monorepo managed with pnpm workspaces and Turbo:
-
-```
-ai-faq-chat/
-├── apps/
-│   ├── api/                  # FastAPI backend
-│   │   ├── api.py            # Main API endpoints
-│   │   ├── chat_service.py   # Chat logic and embedding search
-│   │   ├── embed.py          # Embedding generation script
-│   │   ├── config.py         # Configuration (model, threshold, etc.)
-│   │   ├── faq.json          # FAQ questions and answers (source data)
-│   │   ├── index.faiss       # FAISS vector index (generated)
-│   │   ├── answers.json      # Answer mapping (generated)
-│   │   └── tests/            # API tests
-│   └── web/                  # React frontend
-│       ├── src/              # React application source
-│       └── dist/             # Production build output
-├── packages/                 # Shared packages (if any)
-├── turbo.json                # Turbo build configuration
-└── package.json              # Root package configuration
-```
-
-## Available Scripts
-
-Run these commands from the root directory:
-
-| Command | Description |
-|---------|-------------|
-| `pnpm deps` | Install all dependencies (JavaScript + Python) |
-| `pnpm build` | Build the project and generate FAISS index |
-| `pnpm dev` | Start development servers (API + Web) |
-| `pnpm lint` | Run linters for all packages |
-| `pnpm test` | Run all tests |
-| `pnpm typecheck` | Type-check TypeScript code |
-
-## Testing
-
-Run the test suite:
-
-```shell
-pnpm test
-```
-
-This runs:
-- API unit tests (Python)
-- Frontend tests (if configured)
-
-## Performance
-
-### Metrics
-
-- **Average Response Time**: 50-200ms
-- **Embedding Generation**: ~10-50ms per query
-- **FAISS Search**: ~1-5ms
-- **Concurrent Requests**: 100+ simultaneous requests
-- **Memory Usage**: ~500MB (model + index)
-- **Cold Start**: ~2-3 seconds
-
-### Accuracy
-
-- **Exact Match**: 100% (identical questions)
-- **Paraphrased Questions**: 85-95% (similar phrasing)
-- **Related Questions**: 60-80% (related concepts)
-- **False Positives**: 5-10% (with threshold 0.85)
-
-### Scalability
-
-- **Small FAQs**: <100 questions - Excellent performance
-- **Medium FAQs**: 100-1,000 questions - Optimal use case
-- **Large FAQs**: 1,000-10,000 questions - Still efficient
-- **Very Large FAQs**: >10,000 questions - Consider hybrid search
-
 ## Prerequisites
 
-Make sure you have these installed:
+- [pnpm](https://pnpm.io)
+- [uv](https://astral.sh/uv)
 
-- **[pnpm](https://pnpm.io)** - Fast, disk space efficient package manager
-- **[uv](https://astral.sh/uv)** - Blazing fast Python package manager
+## Getting Started
 
-### Installation
+To install the dependencies run:
 
-**macOS/Linux:**
-```shell
-# Install pnpm
-curl -fsSL https://get.pnpm.io/install.sh | sh -
+   ```shell
+   pnpm deps
+   ```
 
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Windows:**
-```powershell
-# Install pnpm
-iwr https://get.pnpm.io/install.ps1 -useb | iex
-
-# Install uv
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-## Quick Start
-
-### 1. Install Dependencies
-
-```shell
-pnpm deps
-```
-
-This installs both JavaScript and Python dependencies across the monorepo.
-
-### 2. Build the FAQ Index
-
-```shell
-pnpm build
-```
-
-This generates embeddings and builds the FAISS index from `apps/api/faq.json`.
-
-### 3. Start Development Servers
+And to start the API and the Web app run this after:
 
 ```shell
 pnpm dev
 ```
 
-This starts:
-- **API Server**: http://localhost:8000
-- **Web Interface**: http://localhost:5173
+## Updating FAQ
 
-Open your browser and start chatting with the FAQ bot!
-
-## Customization
-
-### Adding/Updating FAQ Questions
-
-1. Edit `apps/api/faq.json`:
-
-```json
-[
-  {
-    "question": "How do I reset my password?",
-    "answer": "Go to settings and click 'Reset Password'."
-  },
-  {
-    "question": "Your new question here?",
-    "answer": "Your answer here."
-  }
-]
-```
-
-2. Rebuild the index:
+If you update FAQ in the `apps/api/faq.json` file, run the following to rebuild the index:
 
 ```shell
 pnpm build
 ```
 
-3. Restart the dev server if running:
+## Testing the API
 
-```shell
-pnpm dev
-```
-
-### Adjusting Similarity Threshold
-
-Edit `apps/api/config.py`:
-
-```python
-SIMILARITY_THRESHOLD = 0.85  # Default: 0.85
-```
-
-**Threshold Guidelines:**
-- **0.90+**: Very strict, only near-exact matches (fewer answers, higher precision)
-- **0.85**: Default balance (recommended)
-- **0.75-0.80**: More permissive (more answers, may include less relevant ones)
-- **<0.75**: Too permissive (likely to return incorrect answers)
-
-### Using a Different Embedding Model
-
-Edit `apps/api/config.py`:
-
-```python
-MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
-```
-
-**Model Options:**
-- `all-MiniLM-L6-v2` (default): Fast, 384 dimensions, good quality
-- `all-mpnet-base-v2`: Higher quality, 768 dimensions, slower
-- `multi-qa-MiniLM-L6-cos-v1`: Optimized for Q&A tasks
-
-After changing the model, rebuild the index with `pnpm build`.
-
-## API Usage
-
-### OpenAI-Compatible Endpoint
-
-The API implements the OpenAI Chat Completions format, making it compatible with OpenAI SDKs and tools.
-
-**Endpoint:** `POST http://localhost:8000/chat`
-
-### Testing with cURL
-
-**Example 1: Question in FAQ**
+You can use `curl` to test the API or use the UI at <http://localhost:5173>
 
 ```shell
 curl -X POST http://localhost:8000/chat \
@@ -295,10 +59,11 @@ curl -X POST http://localhost:8000/chat \
     -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "How do I reset my password?"}]}'
 ```
 
-**Response:**
+You should see a response like this:
+
 ```json
 {
-  "id": "chatcmpl-ad02cfa696a1",
+  "id": "chatcmpl-...",
   "object": "chat.completion",
   "created": 1768231509,
   "model": "faq-chat",
@@ -320,7 +85,7 @@ curl -X POST http://localhost:8000/chat \
 }
 ```
 
-**Example 2: Question NOT in FAQ**
+And if you ask something that's not in the FAQ:
 
 ```shell
 curl -X POST http://localhost:8000/chat \
@@ -328,7 +93,8 @@ curl -X POST http://localhost:8000/chat \
     -d '{"model": "faq-chat", "messages": [{"role": "user", "content": "What is quantum computing?"}]}'
 ```
 
-**Response:**
+The response should be:
+
 ```json
 {
   "id": "chatcmpl-8d069d933415",
@@ -403,6 +169,7 @@ pnpm build
 ```
 
 This creates:
+
 - Optimized frontend bundle in `apps/web/dist/`
 - FAISS index and embeddings in `apps/api/`
 
@@ -412,9 +179,9 @@ Create a `.env` file in `apps/api/`:
 
 ```env
 # Optional: Adjust these settings
-MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
-SIMILARITY_THRESHOLD=0.85
-CORS_ORIGINS=http://localhost:5173,https://yourdomain.com
+MODEL_NAME=all-MiniLM-L6-v2
+SIMILARITY_THRESHOLD=0.9
+CORS_ORIGINS=["http://localhost:5173","https://yourdomain.com"]
 ```
 
 ### Docker Deployment
@@ -429,11 +196,13 @@ docker run -p 8000:8000 -p 5173:5173 faq-chat
 ### Deploy to Fly.io
 
 1. Install Fly CLI:
+
 ```shell
 curl -L https://fly.io/install.sh | sh
 ```
 
-2. Deploy:
+1. Deploy:
+
 ```shell
 fly launch
 fly deploy
@@ -448,7 +217,8 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Questions that should have answers return `null`
 
 **Solutions:**
-- Lower `SIMILARITY_THRESHOLD` in `apps/api/config.py` (try 0.80 or 0.75)
+
+- Lower `SIMILARITY_THRESHOLD` in `apps/api/settings.py` or via environment variable (try 0.8 or lower)
 - Check that the question exists in `apps/api/faq.json`
 - Verify the index was rebuilt after FAQ changes: `pnpm build`
 
@@ -457,7 +227,8 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Questions return answers for different questions
 
 **Solutions:**
-- Raise `SIMILARITY_THRESHOLD` in `apps/api/config.py` (try 0.90)
+
+- Raise `SIMILARITY_THRESHOLD` in `apps/api/settings.py` or via environment variable (try 1.0 or higher)
 - Review similar questions in FAQ - they may be too similar
 - Consider rewording FAQ questions to be more distinct
 
@@ -466,6 +237,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** Responses take >500ms
 
 **Solutions:**
+
 - Check system resources (CPU, memory)
 - Use a smaller embedding model (current: `all-MiniLM-L6-v2`)
 - Reduce concurrent request load
@@ -476,6 +248,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** `pnpm build` errors or index.faiss not created
 
 **Solutions:**
+
 - Verify `faq.json` is valid JSON
 - Check Python dependencies are installed: `cd apps/api && uv sync`
 - Ensure sufficient disk space for embeddings
@@ -486,6 +259,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 **Symptoms:** `ModuleNotFoundError` or import errors
 
 **Solutions:**
+
 - Reinstall dependencies: `pnpm deps`
 - Verify uv is installed: `uv --version`
 - Check Python version: `python3 --version` (requires 3.11+)
@@ -495,6 +269,7 @@ The demo is already deployed at [ai-faq-chat.fly.dev](https://ai-faq-chat.fly.de
 For detailed information about the agent architecture, see [AGENTS.md](./AGENTS.md).
 
 Key architectural decisions:
+
 - **RAG over Fine-tuning**: No model training required, instant updates
 - **FAISS**: Fast vector search, memory-efficient, Python-friendly
 - **Sentence Transformers**: Pre-trained on similarity tasks, good quality
