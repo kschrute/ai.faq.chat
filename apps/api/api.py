@@ -1,14 +1,15 @@
 import asyncio
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
 import context
 from chat_service import ChatService
 from config import Config
-from response import ChatCompletionMessage, ChatCompletionResponse
+from exceptions import InvalidInputError, ModelError, ServiceNotReadyError
+from response import ChatCompletionRequest, ChatCompletionResponse
 
 app = FastAPI(lifespan=context.lifespan)
 
@@ -25,15 +26,32 @@ app.add_middleware(
 )
 
 
-class ChatCompletionRequest(BaseModel):
-    """OpenAI chat completion request format."""
+@app.exception_handler(ServiceNotReadyError)
+async def service_not_ready_handler(
+    request: Request, exc: ServiceNotReadyError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={"detail": str(exc)},
+    )
 
-    model: str | None = None
-    messages: list[ChatCompletionMessage]
-    # Optional fields for OpenAI compatibility (not used but accepted)
-    temperature: float | None = None
-    max_tokens: int | None = None
-    stream: bool | None = None
+
+@app.exception_handler(ModelError)
+async def model_error_handler(request: Request, exc: ModelError) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal model error occurred. Please try again later."},
+    )
+
+
+@app.exception_handler(InvalidInputError)
+async def invalid_input_handler(
+    request: Request, exc: InvalidInputError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)},
+    )
 
 
 @app.post("/chat", response_model=ChatCompletionResponse)

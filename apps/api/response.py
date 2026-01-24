@@ -2,14 +2,27 @@ import time
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from config import Config
 
 
 class ChatCompletionMessage(BaseModel):
     """OpenAI chat completion message format."""
 
     role: Literal["assistant", "user", "system"]
-    content: str | None
+    content: str | None = Field(default=None, max_length=Config.MAX_QUESTION_LENGTH)
+
+
+class ChatCompletionRequest(BaseModel):
+    """OpenAI chat completion request format."""
+
+    model: str | None = None
+    messages: list[ChatCompletionMessage] = Field(max_length=Config.MAX_MESSAGES_LIMIT)
+    # Optional fields for OpenAI compatibility (not used but accepted)
+    temperature: float | None = None
+    max_tokens: int | None = None
+    stream: bool | None = None
 
 
 class ChatCompletionChoice(BaseModel):

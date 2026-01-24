@@ -13,6 +13,10 @@ class Config:
     DEFAULT_MODEL_NAME: str = "all-MiniLM-L6-v2"
     SIMILARITY_THRESHOLD: float = 0.9  # Maximum distance for FAQ matching
 
+    # Security / Input validation
+    MAX_QUESTION_LENGTH: int = 1000
+    MAX_MESSAGES_LIMIT: int = 20
+
     # Search settings
     TOP_K_RESULTS: int = 1  # Number of top results to retrieve
 
@@ -32,15 +36,20 @@ class Config:
     @staticmethod
     def get_cors_origins() -> list[str]:
         """Get CORS allowed origins from environment or use defaults."""
-        origins = ["http://localhost:5173"]
+        origins = []
 
         # Add custom CORS origin if specified
         custom_origin = os.getenv("CORS_ORIGIN")
         if custom_origin:
-            origins.insert(0, custom_origin)
-        else:
-            # Default to allow all origins if not specified
-            origins.insert(0, "*")
+            origins.append(custom_origin)
+
+        # In dev mode, allow localhost
+        if Config.is_dev_mode():
+            origins.append("http://localhost:5173")
+
+        # Fallback to a restrictive default if list is empty (avoids open proxy)
+        if not origins:
+            origins.append("http://localhost:5173")
 
         return origins
 
