@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -11,8 +13,14 @@ from fastapi.staticfiles import StaticFiles
 from chat_service import ChatService
 from engine import FAQEngine
 from exceptions import InvalidInputError, ModelError, ServiceNotReadyError
+from logging_config import setup_logging
+from middleware import RateLimitMiddleware, SecurityMiddleware
 from response import ChatCompletionRequest, ChatCompletionResponse
 from settings import settings
+
+# Configure logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -35,6 +43,44 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan)
+
+# Add security middleware
+app.add_middleware(SecurityMiddleware)
+
+# Add rate limiting (100 requests per minute per IP)
+app.add_middleware(RateLimitMiddleware, calls=100, period=60)
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+
+    # Log incoming request
+    logger.info(
+        "Request started",
+        extra={
+            "method": request.method,
+            "url": str(request.url),
+            "client_host": request.client.host if request.client else None,
+        },
+    )
+
+    response = await call_next(request)
+
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(
+        "Request completed",
+        extra={
+            "method": request.method,
+            "url": str(request.url),
+            "status_code": response.status_code,
+            "process_time": process_time,
+        },
+    )
+
+    return response
 
 
 # Enable CORS
@@ -81,6 +127,36 @@ def get_chat_service(request: Request) -> ChatService:
     Injects the shared FAQEngine instance from app state.
     """
     return ChatService(engine=request.app.state.engine)
+
+
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    """Basic health check endpoint."""
+    return {"status": "healthy"}
+
+
+@app.get("/ready")
+async def readiness_check(request: Request) -> JSONResponse:
+    """Readiness check endpoint - checks if engine is loaded."""
+    try:
+        if not request.app.state.engine.is_ready:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "detail": "Engine not initialized"},
+            )
+        return {"status": "ready"}
+    except AttributeError:
+        # Engine not loaded (e.g., in tests)
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "detail": "Engine not initialized"},
+        )
+
+
+@app.get("/metrics")
+async def metrics() -> dict[str, str]:
+    """Basic metrics endpoint."""
+    return {"status": "ok", "service": "faq-chat", "version": "0.1.0"}
 
 
 @app.post("/chat", response_model=ChatCompletionResponse)
