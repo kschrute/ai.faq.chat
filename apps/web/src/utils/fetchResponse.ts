@@ -1,9 +1,14 @@
 import type { ChatCompletionResponse, ChatMessage } from "@/types";
 
+const API_TIMEOUT = 30000; // 30 seconds
+
 export const fetchResponse = async (
 	message: string,
 	history?: ChatMessage[]
 ): Promise<ChatCompletionResponse> => {
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
 	try {
 		// Build messages array in OpenAI format
 		const messages: Array<ChatMessage> = [];
@@ -42,14 +47,23 @@ export const fetchResponse = async (
 				model: "faq-chat",
 				messages,
 			}),
+			signal: controller.signal,
 		});
+
 		if (!response.ok) {
-			throw new Error("Network response was not ok");
+			const errorText = await response.text();
+			throw new Error(`HTTP ${response.status}: ${errorText}`);
 		}
+
 		const data = await response.json();
 		return data;
 	} catch (error) {
+		if (error instanceof Error && error.name === "AbortError") {
+			throw new Error("Request timeout. Please try again.");
+		}
 		console.error("API error:", error);
 		throw error;
+	} finally {
+		clearTimeout(timeoutId);
 	}
 };
