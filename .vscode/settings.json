@@ -20,11 +20,10 @@
 		"titleBar.inactiveForeground": "#15202b99"
 	},
 
-	// Python
+	// Python API tests
 	"python.defaultInterpreterPath": "./apps/api/.venv/bin/python",
 	"python.testing.pytestEnabled": true,
 	"python.testing.unittestEnabled": false,
-
 	"python.testing.pytestPath": "uv run -- pytest",
 	"python.testing.pytestArgs": [
 		"tests",
@@ -34,6 +33,11 @@
 		"--no-summary"
 	],
 	"python.testing.cwd": "${workspaceFolder}/apps/api",
+
+	// Web App Tests
+	"vitest.ignoreWorkspace": false,
+	"vitest.workspaceConfig": "./apps/web/vitest.config.ts",
+	"vitest.nodeExecutable": "~/.asdf/shims/node",
 
 	// Formatting
 	"biome.lsp.bin": "./apps/web/node_modules/@biomejs/biome/bin/biome",
