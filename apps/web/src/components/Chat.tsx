@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { fetchResponse, flattenContent } from "@/utils";
 import Messages from "./Messages";
 import MessageInput from "./MessageInput";
@@ -8,20 +8,25 @@ function Chat() {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const messagesRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const [messages, setMessages] = useState<ChatMessage[]>([
-		{
-			id: "system-1",
-			role: "system",
-			content:
-				"Hi there! Please ask anything you'd like to know. I'll answer if your question is similar enough to one of the questions on the FAQ list.",
-		},
-		{
-			id: "system-2",
-			role: "system",
-			content:
-				'You can ask something like "How do I reset my password?" or just "Password reset".',
-		},
-	]);
+	const initialMessages = useMemo(
+		() => [
+			{
+				id: "system-1",
+				role: "system" as const,
+				content:
+					"Hi there! Please ask anything you'd like to know. I'll answer if your question is similar enough to one of the questions on the FAQ list.",
+			},
+			{
+				id: "system-2",
+				role: "system" as const,
+				content:
+					'You can ask something like "How do I reset my password?" or just "Password reset".',
+			},
+		],
+		[]
+	);
+
+	const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 	const stateMessagesRef = useRef(messages);
 
 	useEffect(() => {
@@ -69,7 +74,6 @@ function Chat() {
 
 			try {
 				const res = await fetchResponse(message, stateMessagesRef.current);
-				setIsLoading(false);
 
 				const content = res.choices?.[0]?.message?.content;
 				addMessage({
@@ -79,11 +83,12 @@ function Chat() {
 					role: "assistant",
 				});
 			} catch (error: unknown) {
-				setIsLoading(false);
 				addMessage({
 					content: error instanceof Error ? error.message : "Something went wrong",
 					role: "assistant",
 				});
+			} finally {
+				setIsLoading(false);
 			}
 		},
 		[addMessage]
